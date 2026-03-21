@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-primary-50: oklch(0.97 0.014 254);
+  --color-primary-100: oklch(0.93 0.03 254);
+  --color-primary-200: oklch(0.87 0.06 254);
+  --color-primary-300: oklch(0.78 0.1 254);
+  --color-primary-400: oklch(0.68 0.15 254);
+  --color-primary-500: oklch(0.55 0.2 254);
+  --color-primary-600: oklch(0.47 0.2 254);
+  --color-primary-700: oklch(0.4 0.17 254);
+  --color-primary-800: oklch(0.34 0.13 254);
+  --color-primary-900: oklch(0.28 0.1 254);
+  --color-surface-50: oklch(0.985 0.002 270);
+  --color-surface-100: oklch(0.965 0.004 270);
+  --color-surface-200: oklch(0.93 0.006 270);
+  --color-surface-300: oklch(0.87 0.01 270);
+  --color-surface-400: oklch(0.7 0.015 270);
+  --color-surface-500: oklch(0.55 0.015 270);
+  --color-surface-600: oklch(0.45 0.015 270);
+  --color-surface-700: oklch(0.37 0.015 270);
+  --color-surface-800: oklch(0.25 0.015 270);
+  --color-surface-900: oklch(0.18 0.012 270);
+  --color-accent: oklch(0.72 0.19 155);
+  --color-accent-dim: oklch(0.55 0.14 155);
+  --color-warning: oklch(0.8 0.16 75);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background:
+    radial-gradient(circle at 5% 0%, color-mix(in oklab, var(--color-primary-100), white 50%) 0%, transparent 30%),
+    radial-gradient(circle at 95% 100%, color-mix(in oklab, var(--color-accent), white 88%) 0%, transparent 25%),
+    linear-gradient(135deg, var(--color-surface-50), var(--color-primary-50));
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px);
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 40px -20px rgba(22, 28, 45, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--color-surface-600);
+  background: color-mix(in oklab, white 70%, var(--color-surface-100));
+  border: 1px solid var(--color-surface-200);
+}
+
+.chip-active {
+  color: white;
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+}
+
+/* ─── Calibration Screen ─── */
+.calibration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.02s linear;
+}
+
+.calibration-label {
+  text-align: center;
+  font-family: var(--font-sans);
+  pointer-events: none;
+  user-select: none;
+}
+
+.calibration-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.calibration-countdown {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  opacity: 0.5;
+}
+
+/* ─── Permission Request Screen ─── */
+.permission-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.permission-card {
+  max-width: 28rem;
+  width: 100%;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 40px -12px rgba(100, 100, 200, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 2.5rem;
+}
+
+.permission-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+}
+
+.permission-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.permission-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  font-size: 0.8125rem;
+}
