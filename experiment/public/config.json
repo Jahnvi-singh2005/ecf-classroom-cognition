@@ -23,7 +23,7 @@
     { "id": "confusion", "prompt": "Perceived confusion" },
     { "id": "effort", "prompt": "Perceived effort" }
   ],
-  "condition": "active",
+  "condition": "group-1",
   "texts": [
     {
       "id": "text-1",
@@ -69,7 +69,95 @@
           ]
         }
       ],
-      "questions": []
+      "questions": [
+        {
+          "id": "t1-q1",
+          "heading": "QUESTION - 1",
+          "question": "According to the text, what does the democratic peace thesis state?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Democracies rarely go to war with any country" },
+            { "id": "B", "label": "B", "text": "Democracies do not fight other democracies" },
+            { "id": "C", "label": "C", "text": "Democracies eventually become peaceful states" },
+            { "id": "D", "label": "D", "text": "Democracies avoid war after the Cold War" }
+          ]
+        },
+        {
+          "id": "t1-q2",
+          "heading": "QUESTION - 2",
+          "question": "Why does the author prefer the term “thesis” instead of “theory” for democratic peace?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Because it is based only on moral beliefs" },
+            { "id": "B", "label": "B", "text": "Because it describes a pattern that still needs explanation" },
+            { "id": "C", "label": "C", "text": "Because it has been fully proven" },
+            { "id": "D", "label": "D", "text": "Because it applies only to modern democracies" }
+          ]
+        },
+        {
+          "id": "t1-q3",
+          "heading": "QUESTION - 3",
+          "question": "What is the main point of mentioning the Weimar Republic in the text?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "To show that democracies are always unstable" },
+            { "id": "B", "label": "B", "text": "To highlight the difficulty of defining a true democracy" },
+            { "id": "C", "label": "C", "text": "To argue that Germany was never democratic" },
+            { "id": "D", "label": "D", "text": "To explain the causes of World War I" }
+          ]
+        },
+        {
+          "id": "t1-q4",
+          "heading": "QUESTION - 4",
+          "question": "Differentiate between a “fact” and an “explanation” as used in the discussion of democratic peace. Answer in 50-80 words",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 120,
+          "minWords": 50,
+          "maxWords": 80,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        },
+        {
+          "id": "t1-q5",
+          "heading": "QUESTION - 5",
+          "question": "Justify whether the author is more supportive or more critical of the democratic peace. Answer in 80-120 words.",
+          "type": "short-answer",
+          "minSeconds": 120,
+          "maxSeconds": 240,
+          "minWords": 80,
+          "maxWords": 120,
+          "wordLimit": 200,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 200 words"
+          ]
+        },
+        {
+          "id": "t1-q6",
+          "heading": "QUESTION - 6",
+          "question": "Apply the text’s reasoning to this situation: Two countries both hold elections, but one limits press freedom. Using the text, explain whether their peaceful relationship clearly supports the democratic peace thesis. Answer in 30-60 words.",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 90,
+          "minWords": 30,
+          "maxWords": 60,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        }
+      ]
     },
     {
       "id": "text-2",
@@ -115,7 +203,95 @@
           ]
         }
       ],
-      "questions": []
+      "questions": [
+        {
+          "id": "t2-q1",
+          "heading": "QUESTION - 1",
+          "question": "Which term refers to cooperative behavior being favored when it is directed toward relatives?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Group selection" },
+            { "id": "B", "label": "B", "text": "Kin selection" },
+            { "id": "C", "label": "C", "text": "Frequency dependence" },
+            { "id": "D", "label": "D", "text": "Dominance" }
+          ]
+        },
+        {
+          "id": "t2-q2",
+          "heading": "QUESTION - 2",
+          "question": "According to the text, how is cooperation defined?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Any act that increases group survival" },
+            { "id": "B", "label": "B", "text": "Any act that benefits the strongest individuals" },
+            { "id": "C", "label": "C", "text": "Any act that increases the fitness of others" },
+            { "id": "D", "label": "D", "text": "Any act that occurs within families only" }
+          ]
+        },
+        {
+          "id": "t2-q3",
+          "heading": "QUESTION - 3",
+          "question": "Which idea is common to all explanations for the evolution of altruism discussed in the text?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Random interaction between individuals" },
+            { "id": "B", "label": "B", "text": "Removal of individual fitness costs" },
+            { "id": "C", "label": "C", "text": "Assortment of similar individuals" },
+            { "id": "D", "label": "D", "text": "Equal growth rates for all strains" }
+          ]
+        },
+        {
+          "id": "t2-q4",
+          "heading": "QUESTION - 4",
+          "question": "Analyse how assortment changes the typical interaction partners of cooperators and defectors. (50–80 words)",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 120,
+          "minWords": 50,
+          "maxWords": 80,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        },
+        {
+          "id": "t2-q5",
+          "heading": "QUESTION - 5",
+          "question": "Evaluate whether ignoring stochastic (random) effects is appropriate for understanding the mechanisms described in the text. (80–120 words)",
+          "type": "short-answer",
+          "minSeconds": 120,
+          "maxSeconds": 240,
+          "minWords": 80,
+          "maxWords": 120,
+          "wordLimit": 200,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 200 words"
+          ]
+        },
+        {
+          "id": "t2-q6",
+          "heading": "QUESTION - 6",
+          "question": "Apply the idea of dominance. Suppose two microbial strains are grown in a turbidostat, meaning an experimental system that keeps environmental conditions and total population size constant by continuously diluting the culture. If one strain grows faster than the other at all frequencies, what will happen to the slower-growing strain? Explain why. (30–60 words)",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 90,
+          "minWords": 30,
+          "maxWords": 60,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        }
+      ]
     },
     {
       "id": "text-3",
@@ -161,7 +337,95 @@
           ]
         }
       ],
-      "questions": []
+      "questions": [
+        {
+          "id": "t3-q1",
+          "heading": "QUESTION - 1",
+          "question": "In the used-car example, what term is used to describe a bad-quality car?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Defective" },
+            { "id": "B", "label": "B", "text": "Inferior" },
+            { "id": "C", "label": "C", "text": "Lemon" },
+            { "id": "D", "label": "D", "text": "Second-hand" }
+          ]
+        },
+        {
+          "id": "t3-q2",
+          "heading": "QUESTION - 2",
+          "question": "According to the text, what does the probability ( q ) represent?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "The probability a used car will be resold" },
+            { "id": "B", "label": "B", "text": "The proportion of good cars produced" },
+            { "id": "C", "label": "C", "text": "The chance a buyer can identify a lemon" },
+            { "id": "D", "label": "D", "text": "The difference between new and used car prices" }
+          ]
+        },
+        {
+          "id": "t3-q3",
+          "heading": "QUESTION - 3",
+          "question": "Which situation best explains why good and bad used cars sell at the same price?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "Sellers are legally required to charge the same price" },
+            { "id": "B", "label": "B", "text": "Buyers prefer cheaper cars regardless of quality" },
+            { "id": "C", "label": "C", "text": "Buyers cannot distinguish between good cars and lemons" },
+            { "id": "D", "label": "D", "text": "Sellers do not know the quality of their own cars" }
+          ]
+        },
+        {
+          "id": "t3-q4",
+          "heading": "QUESTION - 4",
+          "question": "Differentiate between the incentives faced by sellers of good cars and sellers of lemons in the used-car market. (50–80 words)",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 120,
+          "minWords": 50,
+          "maxWords": 80,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        },
+        {
+          "id": "t3-q5",
+          "heading": "QUESTION - 5",
+          "question": "Assess whether government intervention could improve outcomes in markets like the used-car market described. Support your answer using examples from the text. (80–120 words)",
+          "type": "short-answer",
+          "minSeconds": 120,
+          "maxSeconds": 240,
+          "minWords": 80,
+          "maxWords": 120,
+          "wordLimit": 200,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 200 words"
+          ]
+        },
+        {
+          "id": "t3-q6",
+          "heading": "QUESTION - 6",
+          "question": "Apply the idea of information asymmetry. In this market, information asymmetry means that one side of the transaction knows more than the other. Who knows more, and how does this affect pricing? (30–60 words)",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 90,
+          "minWords": 30,
+          "maxWords": 60,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        }
+      ]
     },
     {
       "id": "text-4",
@@ -206,7 +470,95 @@
           ]
         }
       ],
-      "questions": []
+      "questions": [
+        {
+          "id": "t4-q1",
+          "heading": "QUESTION - 1",
+          "question": "According to the text, what is the primary goal of condition A1 in the Byzantine Generals Problem?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "To ensure that all traitors are identified and removed from the army." },
+            { "id": "B", "label": "B", "text": "To guarantee that all loyal generals decide upon the same plan of action." },
+            { "id": "C", "label": "C", "text": "To allow messengers to communicate without being intercepted by the enemy." },
+            { "id": "D", "label": "D", "text": "To ensure that the commander is always a loyal member of the army." }
+          ]
+        },
+        {
+          "id": "t4-q2",
+          "heading": "QUESTION - 2",
+          "question": "How does the text define a \"bad plan\" in the context of the generals' agreement?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "A plan that results in a military defeat against the enemy city." },
+            { "id": "B", "label": "B", "text": "A plan that is chosen when the majority of the generals are traitors." },
+            { "id": "C", "label": "C", "text": "A plan that is different from what would have been adopted if no traitors existed." },
+            { "id": "D", "label": "D", "text": "A plan where the generals decide to retreat instead of attacking the enemy." }
+          ]
+        },
+        {
+          "id": "t4-q3",
+          "heading": "QUESTION - 3",
+          "question": "Based on the text's analysis of the three-general scenario, why is it impossible for a loyal lieutenant to distinguish between a loyal commander and a traitorous commander?",
+          "type": "mcq",
+          "minSeconds": 20,
+          "maxSeconds": 40,
+          "options": [
+            { "id": "A", "label": "A", "text": "The messengers intentionally scramble the messages to protect the generals." },
+            { "id": "B", "label": "B", "text": "The lieutenant cannot communicate directly with the other lieutenants in the camp." },
+            { "id": "C", "label": "C", "text": "The lieutenant receives the exact same set of conflicting messages in both scenarios." },
+            { "id": "D", "label": "D", "text": "The loyal generals are required by the algorithm to ignore all incoming messages." }
+          ]
+        },
+        {
+          "id": "t4-q4",
+          "heading": "QUESTION - 4",
+          "question": "Differentiate between condition IC1 and condition IC2 as described in the interactive consistency conditions. (50–80 words)",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 120,
+          "minWords": 50,
+          "maxWords": 80,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        },
+        {
+          "id": "t4-q5",
+          "heading": "QUESTION - 5",
+          "question": "Categorize the outcome of the scenario where the commander is a traitor and sends “attack” to one lieutenant and “retreat” to the other. (80–120 words)",
+          "type": "short-answer",
+          "minSeconds": 120,
+          "maxSeconds": 240,
+          "minWords": 80,
+          "maxWords": 120,
+          "wordLimit": 200,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 200 words"
+          ]
+        },
+        {
+          "id": "t4-q6",
+          "heading": "QUESTION - 6",
+          "question": "Illustrate how condition A2' would be applied if four loyal generals all believe the best plan is \"attack,\" but two traitors suggest \"retreat.\" According to the text, what must the final decision? Answer in 30-60 words.",
+          "type": "short-answer",
+          "minSeconds": 60,
+          "maxSeconds": 90,
+          "minWords": 30,
+          "maxWords": 60,
+          "wordLimit": 100,
+          "notes": [
+            "Add a box where to type the answers into",
+            "Maximum limit of text – 100 words"
+          ]
+        }
+      ]
     }
   ]
 }

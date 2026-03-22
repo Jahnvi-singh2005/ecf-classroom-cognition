@@ -29,11 +29,15 @@ export default function Registration({ onSubmit }: RegistrationProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
+
+        const trimmedEmail = email.trim();
+        const trimmedNotes = notes.trim();
+
         onSubmit({
             name: name.trim(),
             age: Number(age),
-            email: email.trim() || undefined,
-            notes: notes.trim() || undefined,
+            ...(trimmedEmail ? { email: trimmedEmail } : {}),
+            ...(trimmedNotes ? { notes: trimmedNotes } : {}),
         });
     };
 

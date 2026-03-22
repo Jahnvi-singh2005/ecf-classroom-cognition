@@ -14,15 +14,23 @@ export interface PostAssessmentSettings {
 
 export interface QuestionOption {
     id: string;
+    label?: string;
     text: string;
 }
 
 export interface Question {
     id: string;
+    heading?: string;
     question: string;
-    type: 'mcq' | 'short-answer';
+    type: 'mcq' | 'objective' | 'short-answer';
     options?: QuestionOption[];
     correctAnswer?: string;
+    minSeconds?: number;
+    maxSeconds?: number;
+    minWords?: number;
+    maxWords?: number;
+    wordLimit?: number;
+    notes?: string[];
 }
 
 export interface SubjectiveQuestion {
@@ -36,9 +44,11 @@ export interface FeedbackQuestion {
 }
 
 export interface TextVariant {
-    type: 'passive' | 'active' | 'control';
+    type: 'passive' | 'active' | 'constructive' | 'control';
     slides: string[];
 }
+
+export type GroupCondition = 'group-1' | 'group-2' | 'group-3' | 'group-4';
 
 export interface TextConfig {
     id: string;
@@ -60,7 +70,7 @@ export interface ExperimentConfig {
     calibrationSettings: CalibrationSettings;
     postAssessmentSettings?: PostAssessmentSettings;
     feedbackQuestions?: FeedbackQuestion[];
-    condition: 'passive' | 'active' | 'control' | 'random';
+    condition: GroupCondition;
     texts: TextConfig[];
 }
 
@@ -99,6 +109,9 @@ export interface SubjectiveResponse {
     questionId: string;
     prompt: string;
     response: string;
+    questionType?: 'mcq' | 'objective' | 'short-answer';
+    selectedOptionId?: string | null;
+    selectedOptionText?: string | null;
     wordCount: number;
     autoSubmitted: boolean;
     timestamps: QuestionTimestamps;
@@ -118,8 +131,26 @@ export interface ExperimentState {
     participant: Participant | null;
     currentTextIndex: number;
     currentSlideIndex: number;
-    assignedCondition: 'passive' | 'active' | 'control';
+    assignedCondition: GroupCondition;
     answers: Record<string, TextAssessmentResult>;
     startTime: number | null;
     slideStartTimes: number[];
+}
+
+export interface ExperimentSessionRecord {
+    sessionId: string;
+    participantKey: string;
+    participant: Participant;
+    experimentTitle: string;
+    assignedCondition: GroupCondition;
+    startedAt: number;
+    completedAt: number;
+    calibrationEnabled: boolean;
+    totalTexts: number;
+    assessments: Record<string, TextAssessmentResult>;
+}
+
+export interface ProjectSettingsRecord {
+    config: ExperimentConfig;
+    updatedAt: number;
 }

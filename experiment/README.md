@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+# ECF Classroom Cognition – Experiment App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This app now supports:
 
-Currently, two official plugins are available:
+- Firebase-backed experiment session storage (user-wise + session-wise)
+- Firebase-backed project settings sync
+- Password-protected settings save flow (`VITE_SETTINGS_PASSWORD`, default `pass123`)
+- History page to view all previously synced experiment sessions
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 1) Environment setup
 
-## React Compiler
+1. Copy [.env.example](.env.example) to `.env`.
+2. Fill your Firebase web config keys.
+3. Keep this key set for password protection:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_SETTINGS_PASSWORD=pass123
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 2) Firebase setup steps
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Create a Firebase project.
+2. Add a **Web App** and copy config values.
+3. Enable **Cloud Firestore** in production or test mode.
+4. Add your local/dev domain to authorized domains if needed.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 3) Firestore collections used
+
+- `projectMeta/settings` → synced experiment config
+- `projectMeta/settingsPassword` → synced settings password record
+- `experimentSessions/{sessionId}` → each completed experiment session
+- `participants/{participantKey}` → participant metadata
+- `participants/{participantKey}/sessions/{sessionId}` → user-wise session history
+
+## 4) Run app
+
+```bash
+npm install
+npm run dev
 ```
+
+## 5) Notes
+
+- Screen/video recordings remain local-only (downloaded locally), as requested.
+- If Firebase env keys are missing, app still runs with local config and local flow.
+- History and sync become active automatically once Firebase env is configured.

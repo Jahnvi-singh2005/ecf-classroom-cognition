@@ -1,8 +1,10 @@
 interface CompletionProps {
     participantName: string;
+    syncStatus?: 'idle' | 'saving' | 'saved' | 'error';
+    syncMessage?: string | null;
 }
 
-export default function Completion({ participantName }: CompletionProps) {
+export default function Completion({ participantName, syncStatus = 'idle', syncMessage = null }: CompletionProps) {
     return (
         <div className="flex-1 flex items-center justify-center p-6">
             <div className="w-full max-w-lg">
@@ -24,6 +26,14 @@ export default function Completion({ participantName }: CompletionProps) {
                             Your responses have been recorded. You may now close this window.
                             If you have any questions, please contact the experiment administrator.
                         </p>
+
+                        {syncStatus !== 'idle' && (
+                            <p className={`mt-3 text-xs ${syncStatus === 'error' ? 'text-red-600' : 'text-surface-600'}`}>
+                                {syncStatus === 'saving' && 'Syncing this session to Firebase...'}
+                                {syncStatus === 'saved' && (syncMessage || 'Session synced to Firebase successfully.')}
+                                {syncStatus === 'error' && (syncMessage || 'Session could not be synced to Firebase.')}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>

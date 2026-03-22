@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
     FeedbackQuestion,
     PostAssessmentSettings,
-    SubjectiveQuestion,
+    Question,
     SubjectiveResponse,
     TextAssessmentResult,
 } from '../types';
@@ -10,7 +10,7 @@ import type {
 interface PostAssessmentProps {
     textId: string;
     textTitle: string;
-    questions: SubjectiveQuestion[];
+    questions: Question[];
     feedbackQuestions: FeedbackQuestion[];
     settings: PostAssessmentSettings;
     onSubmit: (result: TextAssessmentResult) => void;
@@ -18,8 +18,10 @@ interface PostAssessmentProps {
 
 interface ActiveQuestionState {
     questionId: string;
+    questionType: 'mcq' | 'objective' | 'short-answer';
     prompt: string;
     response: string;
+    selectedOptionId: string | null;
     t1QuestionShown: number;
     t2TypingStarted: number | null;
     t3FirstKeypress: number | null;
@@ -37,6 +39,8 @@ const clampWords = (value: string, limit: number): string => {
     return words.slice(0, limit).join(' ');
 };
 
+const isObjectiveQuestion = (type?: Question['type']): boolean => type === 'mcq' || type === 'objective';
+
 export default function PostAssessment({
     textId,
     textTitle,
@@ -45,7 +49,14 @@ export default function PostAssessment({
     settings,
     onSubmit,
 }: PostAssessmentProps) {
-    const [stage, setStage] = useState<'subjective' | 'feedback'>('subjective');
+    const normalizedQuestions = useMemo(
+        () => questions.filter((q) => Boolean(q?.id && q?.question?.trim())),
+        [questions],
+    );
+
+    const [stage, setStage] = useState<'subjective' | 'feedback'>(
+        normalizedQuestions.length > 0 ? 'subjective' : 'feedback',
+    );
     const [index, setIndex] = useState(0);
     const [mode, setMode] = useState<'thinking' | 'typing'>('thinking');
     const [elapsedMs, setElapsedMs] = useState(0);
@@ -56,20 +67,24 @@ export default function PostAssessment({
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
     const autoSubmittedRef = useRef(false);
 
-    const currentQuestion = questions[index];
+    const currentQuestion = normalizedQuestions[index];
+    const hasQuestions = normalizedQuestions.length > 0;
 
     const [activeQuestion, setActiveQuestion] = useState<ActiveQuestionState>(() => ({
-        questionId: currentQuestion.id,
-        prompt: currentQuestion.prompt,
+        questionId: currentQuestion?.id || 'no-question',
+        questionType: currentQuestion?.type || 'short-answer',
+        prompt: currentQuestion?.question || 'No question configured.',
         response: '',
+        selectedOptionId: null,
         t1QuestionShown: Date.now(),
-        t2TypingStarted: null,
+        t2TypingStarted: isObjectiveQuestion(currentQuestion?.type) ? Date.now() : null,
         t3FirstKeypress: null,
     }));
 
-    const minQuestionMs = settings.questionMinSeconds * 1000;
-    const maxQuestionMs = settings.questionMaxSeconds * 1000;
-    const minThinkingMs = settings.thinkingMinSeconds * 1000;
+    const minQuestionMs = (currentQuestion?.minSeconds ?? settings.questionMinSeconds) * 1000;
+    const maxQuestionMs = (currentQuestion?.maxSeconds ?? settings.questionMaxSeconds) * 1000;
+    const minThinkingMs = isObjectiveQuestion(currentQuestion?.type) ? 0 : settings.thinkingMinSeconds * 1000;
+    const maxWords = currentQuestion?.wordLimit ?? settings.wordLimit;
 
     const canStartTyping = elapsedMs >= minThinkingMs;
     const canSubmit = elapsedMs >= minQuestionMs;
@@ -86,19 +101,26 @@ export default function PostAssessment({
     }, [settings.feedbackScaleMin, settings.feedbackScaleMax]);
 
     const resetForNextQuestion = useCallback((nextIndex: number) => {
-        const nextQuestion = questions[nextIndex];
+        const nextQuestion = normalizedQuestions[nextIndex];
+        if (!nextQuestion) {
+            setStage('feedback');
+            return;
+        }
+
         setElapsedMs(0);
         setHint(null);
-        setMode('thinking');
+        setMode(isObjectiveQuestion(nextQuestion.type) ? 'typing' : 'thinking');
         setActiveQuestion({
             questionId: nextQuestion.id,
-            prompt: nextQuestion.prompt,
+            questionType: nextQuestion.type,
+            prompt: nextQuestion.question,
             response: '',
+            selectedOptionId: null,
             t1QuestionShown: Date.now(),
-            t2TypingStarted: null,
+            t2TypingStarted: isObjectiveQuestion(nextQuestion.type) ? Date.now() : null,
             t3FirstKeypress: null,
         });
-    }, [questions]);
+    }, [normalizedQuestions]);
 
     useEffect(() => {
         if (stage !== 'subjective') return;
@@ -113,12 +135,21 @@ export default function PostAssessment({
 
     const goNext = useCallback((autoSubmitted: boolean) => {
         const t4Submitted = Date.now();
-        const wordCount = wordsIn(activeQuestion.response);
+        const selectedOptionText = (currentQuestion?.options || []).find(
+            (option) => option.id === activeQuestion.selectedOptionId,
+        )?.text;
+        const finalResponse = isObjectiveQuestion(activeQuestion.questionType)
+            ? (selectedOptionText || '')
+            : activeQuestion.response.trim();
+        const wordCount = wordsIn(finalResponse);
 
         const response: SubjectiveResponse = {
             questionId: activeQuestion.questionId,
             prompt: activeQuestion.prompt,
-            response: activeQuestion.response.trim(),
+            response: finalResponse,
+            questionType: activeQuestion.questionType,
+            selectedOptionId: activeQuestion.selectedOptionId,
+            selectedOptionText: selectedOptionText || null,
             wordCount,
             autoSubmitted,
             timestamps: {
@@ -146,7 +177,7 @@ export default function PostAssessment({
 
         setResponses((prev) => {
             const next = [...prev, response];
-            if (index < questions.length - 1) {
+            if (index < normalizedQuestions.length - 1) {
                 setIndex((prevIndex) => prevIndex + 1);
                 resetForNextQuestion(index + 1);
             } else {
@@ -154,7 +185,7 @@ export default function PostAssessment({
             }
             return next;
         });
-    }, [activeQuestion, index, questions.length, resetForNextQuestion]);
+    }, [activeQuestion, currentQuestion?.options, index, normalizedQuestions.length, resetForNextQuestion]);
 
     useEffect(() => {
         if (stage !== 'subjective') return;
@@ -166,6 +197,7 @@ export default function PostAssessment({
     }, [elapsedMs, maxQuestionMs, goNext, stage]);
 
     const startTyping = useCallback(() => {
+        if (isObjectiveQuestion(currentQuestion?.type)) return;
         if (!canStartTyping) {
             setHint(`You can start typing in ${Math.ceil(thinkingRemainingMs / 1000)}s.`);
             return;
@@ -185,19 +217,25 @@ export default function PostAssessment({
                 textAreaRef.current.value.length,
             );
         });
-    }, [canStartTyping, thinkingRemainingMs]);
+    }, [canStartTyping, currentQuestion?.type, thinkingRemainingMs]);
 
     const submitTyping = useCallback(() => {
         if (!canSubmit) {
             setHint(`You can submit in ${Math.ceil(minRemainingMs / 1000)}s.`);
             return;
         }
+
+        if (isObjectiveQuestion(currentQuestion?.type) && !activeQuestion.selectedOptionId) {
+            setHint('Please select one option before submitting.');
+            return;
+        }
+
         goNext(false);
-    }, [canSubmit, goNext, minRemainingMs]);
+    }, [activeQuestion.selectedOptionId, canSubmit, currentQuestion?.type, goNext, minRemainingMs]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
-            if (stage !== 'subjective') return;
+            if (stage !== 'subjective' || !hasQuestions || isObjectiveQuestion(currentQuestion?.type)) return;
 
             if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                 event.preventDefault();
@@ -211,12 +249,12 @@ export default function PostAssessment({
 
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
-    }, [mode, stage, startTyping, submitTyping]);
+    }, [currentQuestion?.type, hasQuestions, mode, stage, startTyping, submitTyping]);
 
     const handleTextareaChange = (value: string) => {
         setActiveQuestion((prev) => ({
             ...prev,
-            response: clampWords(value, settings.wordLimit),
+            response: clampWords(value, maxWords),
         }));
     };
 
@@ -232,6 +270,16 @@ export default function PostAssessment({
                 t3FirstKeypress: Date.now(),
             };
         });
+    };
+
+    const handleMcqSelection = (optionId: string) => {
+        setHint(null);
+        setActiveQuestion((prev) => ({
+            ...prev,
+            selectedOptionId: optionId,
+            t2TypingStarted: prev.t2TypingStarted ?? Date.now(),
+            t3FirstKeypress: prev.t3FirstKeypress ?? Date.now(),
+        }));
     };
 
     const handleRatingChange = (questionId: string, value: number) => {
@@ -296,7 +344,7 @@ export default function PostAssessment({
                         ))}
                     </div>
 
-                    {hint && <p className="text-sm text-amber-600 mt-4">{hint}</p>}
+                    {/* {hint && <p className="text-sm text-amber-600 mt-4">{hint}</p>} */}
 
                     <button
                         onClick={submitFeedback}
@@ -311,83 +359,142 @@ export default function PostAssessment({
     }
 
     const wordCount = wordsIn(activeQuestion.response);
-    const isThinking = mode === 'thinking';
+    const isMcq = isObjectiveQuestion(currentQuestion?.type);
+    const isThinking = mode === 'thinking' && !isMcq;
     const thinkingSecondsLeft = Math.ceil(thinkingRemainingMs / 1000);
     const totalSecondsLeft = Math.ceil(questionRemainingMs / 1000);
     const thinkingProgress = minThinkingMs > 0 ? Math.min((elapsedMs / minThinkingMs) * 100, 100) : 100;
+    const heading = currentQuestion?.heading || `QUESTION - ${index + 1}`;
 
     return (
         <div className="flex-1 flex items-center justify-center p-4 md:p-6">
             <div className="w-full max-w-3xl panel p-6 md:p-8">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
-                        <span className="chip">Post-reading response</span>
+                        <span className="chip">Post-reading assessment</span>
                         <h2 className="text-2xl font-semibold text-surface-900 mt-2">{textTitle}</h2>
                     </div>
                     <div className="text-right text-xs text-surface-500">
-                        <div>Question {index + 1} / {questions.length}</div>
-                        <div className="mt-1">Max {settings.wordLimit} words</div>
+                        <div>{heading}</div>
+                        <div>Question {index + 1} / {normalizedQuestions.length}</div>
+                        {!isMcq && <div className="mt-1">Max {maxWords} words</div>}
                     </div>
                 </div>
 
                 <div className="mb-4 rounded-2xl border border-surface-200 bg-white/80 p-4 md:p-5">
-                    <p className="text-sm font-semibold text-surface-800 mb-2">Prompt</p>
-                    <p className="text-surface-700 leading-relaxed">{currentQuestion.prompt}</p>
+                    <p className="text-sm font-semibold text-surface-800 mb-2">{heading}</p>
+                    <p className="text-surface-700 leading-relaxed">{currentQuestion?.question || activeQuestion.prompt}</p>
                 </div>
 
-                <div className="grid md:grid-cols-[1.3fr_1fr] gap-3 mb-4">
-                    <div className={`rounded-2xl border p-4 ${isThinking ? 'border-warning bg-yellow-50/70' : 'border-accent bg-emerald-50/70'}`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-surface-600">Current mode</p>
-                            <span className={`inline-flex w-2.5 h-2.5 rounded-full ${isThinking ? 'bg-warning animate-pulse' : 'bg-accent'}`} />
-                        </div>
-                        <p className="text-lg font-bold text-surface-900">{isThinking ? 'Thinking window' : 'Typing window'}</p>
-                        <p className="text-sm text-surface-600 mt-1">
-                            {isThinking
-                                ? `Think for ${thinkingSecondsLeft}s more, then press Ctrl + Enter to start typing.`
-                                : 'Type your answer and press Ctrl + Enter to submit.'}
-                        </p>
-
-                        <div className="mt-3 h-1.5 bg-white/80 rounded-full overflow-hidden border border-surface-200">
-                            <div
-                                className={`h-full transition-all duration-100 ${isThinking ? 'bg-warning' : 'bg-accent'}`}
-                                style={{ width: `${isThinking ? thinkingProgress : 100}%` }}
-                            />
-                        </div>
+                {isMcq ? (
+                    <div className="space-y-2 mb-4">
+                        {(currentQuestion?.options || []).map((option, optionIndex) => {
+                            const label = option.label || option.id || String.fromCharCode(65 + optionIndex);
+                            const selected = activeQuestion.selectedOptionId === option.id;
+                            return (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => handleMcqSelection(option.id)}
+                                    className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${selected
+                                        ? 'border-primary-400 bg-primary-50 text-primary-900'
+                                        : 'border-surface-200 bg-white hover:bg-surface-50'
+                                        }`}
+                                >
+                                    <span className="font-semibold mr-2">{label})</span>
+                                    <span>{option.text}</span>
+                                </button>
+                            );
+                        })}
                     </div>
+                ) : (
+                    <>
+                        <div className="grid md:grid-cols-[1.3fr_1fr] gap-3 mb-4">
+                            <div className={`rounded-2xl border p-4 ${isThinking ? 'border-warning bg-yellow-50/70' : 'border-accent bg-emerald-50/70'}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-surface-600">Current mode</p>
+                                    <span className={`inline-flex w-2.5 h-2.5 rounded-full ${isThinking ? 'bg-warning animate-pulse' : 'bg-accent'}`} />
+                                </div>
+                                <p className="text-lg font-bold text-surface-900">{isThinking ? 'Thinking window' : 'Typing window'}</p>
+                                <p className="text-sm text-surface-600 mt-1">
+                                    {isThinking
+                                        ? `Think for ${thinkingSecondsLeft}s more, then press Ctrl + Enter to start typing.`
+                                        : 'Type your answer and press Ctrl + Enter to submit.'}
+                                </p>
 
-                    <div className="rounded-2xl border border-surface-200 bg-white/70 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-surface-600 mb-2">Timing guide</p>
-                        <div className="space-y-1 text-sm text-surface-700">
-                            <p>Thinking min: <strong>{settings.thinkingMinSeconds}s</strong></p>
-                            <p>Total min: <strong>{settings.questionMinSeconds}s</strong></p>
-                            <p>Auto-next: <strong>{settings.questionMaxSeconds}s</strong></p>
+                                <div className="mt-3 h-1.5 bg-white/80 rounded-full overflow-hidden border border-surface-200">
+                                    <div
+                                        className={`h-full transition-all duration-100 ${isThinking ? 'bg-warning' : 'bg-accent'}`}
+                                        style={{ width: `${isThinking ? thinkingProgress : 100}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-surface-200 bg-white/70 p-4">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-surface-600 mb-2">Timing guide</p>
+                                <div className="space-y-1 text-sm text-surface-700">
+                                    <p>Thinking min: <strong>{settings.thinkingMinSeconds}s</strong></p>
+                                    <p>Total min: <strong>{Math.floor(minQuestionMs / 1000)}s</strong></p>
+                                    <p>Auto-next: <strong>{Math.floor(maxQuestionMs / 1000)}s</strong></p>
+                                    <p>Max words: <strong>{maxWords}</strong></p>
+                                    {(currentQuestion?.minWords && currentQuestion?.maxWords) && (
+                                        <p>Target words: <strong>{currentQuestion.minWords}–{currentQuestion.maxWords}</strong></p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <textarea
-                    ref={textAreaRef}
-                    value={activeQuestion.response}
-                    onChange={(e) => handleTextareaChange(e.target.value)}
-                    onKeyDown={handleTextareaKeyDown}
-                    disabled={mode !== 'typing'}
-                    placeholder={mode === 'thinking' ? 'Thinking window active...' : 'Type your response here...'}
-                    rows={8}
-                    className={`w-full px-4 py-3 rounded-2xl border-2 outline-none text-surface-800 bg-white placeholder:text-surface-400 transition-all resize-none ${isThinking
-                        ? 'border-warning/50 bg-surface-100/80 text-surface-500'
-                        : 'border-accent/50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100'
-                        } disabled:bg-surface-100 disabled:text-surface-400`}
-                />
+                        <textarea
+                            ref={textAreaRef}
+                            value={activeQuestion.response}
+                            onChange={(e) => handleTextareaChange(e.target.value)}
+                            onKeyDown={handleTextareaKeyDown}
+                            disabled={mode !== 'typing'}
+                            placeholder={mode === 'thinking' ? 'Thinking window active...' : 'Type your response here...'}
+                            rows={8}
+                            className={`w-full px-4 py-3 rounded-2xl border-2 outline-none text-surface-800 bg-white placeholder:text-surface-400 transition-all resize-none ${isThinking
+                                ? 'border-warning/50 bg-surface-100/80 text-surface-500'
+                                : 'border-accent/50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100'
+                                } disabled:bg-surface-100 disabled:text-surface-400`}
+                        />
 
-                <div className="mt-3 flex items-center justify-between text-xs text-surface-500">
-                    <span>{wordCount} / {settings.wordLimit} words</span>
-                    <span>{totalSecondsLeft}s left</span>
+                        <div className="mt-3 flex items-center justify-between text-xs text-surface-500">
+                            <span>{wordCount} / {maxWords} words</span>
+                            <span>{totalSecondsLeft}s left</span>
+                        </div>
+                    </>
+                )}
+
+                <div className="mt-4 rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm text-surface-700">
+                    <p>Minimum - {Math.floor(minQuestionMs / 1000)} seconds; maximum – {Math.floor(maxQuestionMs / 1000)} seconds</p>
+                    {currentQuestion?.notes?.map((note, noteIndex) => (
+                        <p key={`${currentQuestion.id}-note-${noteIndex}`} className="mt-1">• {note}</p>
+                    ))}
                 </div>
 
                 {hint && (
                     <p className="text-sm text-amber-700 mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{hint}</p>
                 )}
+
+                <div className="mt-4 flex justify-end">
+                    {!isMcq && mode === 'thinking' ? (
+                        <button
+                            type="button"
+                            onClick={startTyping}
+                            className="px-5 py-2.5 rounded-xl bg-surface-100 text-surface-700 font-semibold hover:bg-surface-200 transition-all cursor-pointer"
+                        >
+                            Start typing (Ctrl + Enter)
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={submitTyping}
+                            className="px-5 py-2.5 rounded-xl bg-linear-to-r from-primary-500 to-primary-600 text-white font-semibold shadow-lg shadow-primary-400/30 hover:shadow-xl hover:shadow-primary-400/40 active:scale-[0.98] transition-all cursor-pointer"
+                        >
+                            Submit answer →
+                        </button>
+                    )}
+                </div>
 
                 <div className="mt-5 h-2 bg-surface-100 rounded-full overflow-hidden">
                     <div
