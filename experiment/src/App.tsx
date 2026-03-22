@@ -13,7 +13,7 @@ import type {
   TextAssessmentResult,
 } from './types';
 import { RecordingService } from './services/RecordingService';
-import { buildParticipantKey, getProjectSettings, saveExperimentSession, saveProjectSettings } from './services/ExperimentDataService';
+import { buildParticipantKey, getProjectSettings, getStoredSettingsPassword, saveExperimentSession, saveProjectSettings } from './services/ExperimentDataService';
 import { hasFirebaseConfig } from './services/firebase';
 import Registration from './components/Registration';
 import ExperimentSettings from './components/ExperimentSettings';
@@ -144,8 +144,24 @@ function App() {
 
         try {
           const remoteConfig = await getProjectSettings();
-          return remoteConfig || localConfig;
-        } catch {
+          
+          if (remoteConfig) {
+            const localVersion = localConfig.version || 0;
+            const remoteVersion = remoteConfig.version || 0;
+            
+            if (localVersion > remoteVersion) {
+              console.log(`[Config Migration] Local version (${localVersion}) > Remote version (${remoteVersion}). Migrating Firebase database.`);
+              const password = await getStoredSettingsPassword();
+              await saveProjectSettings(localConfig, password || 'pass123');
+              return localConfig;
+            }
+            
+            return remoteConfig;
+          }
+          
+          return localConfig;
+        } catch (e) {
+          console.error('[Config Error] Failed to fetch or migrate remote config:', e);
           return localConfig;
         }
       })

@@ -64,6 +64,7 @@ export interface CalibrationSettings {
 }
 
 export interface ExperimentConfig {
+    version?: number;
     experimentTitle: string;
     instructions: string;
     slideSettings: SlideConfig;

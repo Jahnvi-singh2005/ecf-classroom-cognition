@@ -30,7 +30,7 @@ const cloneTexts = (texts: TextConfig[]): TextConfig[] => texts.map((text) => ({
         ...variant,
         slides: [...variant.slides],
     })),
-    questions: [...text.questions],
+    questions: text.questions ? [...text.questions] : [],
     subjectiveQuestions: text.subjectiveQuestions ? [...text.subjectiveQuestions] : [],
 }));
 
@@ -504,7 +504,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
 
     const exportContentJson = () => {
         const payload = {
-            version: 1,
+            version: initialConfig.version || 1,
             exportedAt: new Date().toISOString(),
             texts: cloneTexts(workingTexts),
         };
@@ -591,6 +591,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
 
         const nextConfig: ExperimentConfig = {
             ...initialConfig,
+            version: initialConfig.version,
             experimentTitle: experimentTitle.trim() || initialConfig.experimentTitle,
             condition,
             texts: cloneTexts(workingTexts),

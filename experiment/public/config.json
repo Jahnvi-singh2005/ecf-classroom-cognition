@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "experimentTitle": "ECF Classroom Cognition – Reading Experiment",
   "instructions": "Welcome to this reading experiment.\n\nYou will read multiple texts presented as slides. Read each slide carefully and stay focused.\n\n**Reading screen controls:**\n- Each slide has a minimum time before progression is enabled.\n- You can continue using the button or by pressing **Spacebar**.\n- Each slide also has a maximum time and auto-advances at timeout.\n\n**Post-reading response flow (after each text):**\n1. A subjective prompt appears.\n2. Think before typing (thinking window).\n3. Press **Ctrl + Enter** to start typing.\n4. Press **Ctrl + Enter** again to submit.\n5. The screen advances automatically at maximum time if needed.\n\nYou cannot go back to previous questions. Please answer sincerely and concisely.\n\nClick **Begin Experiment** when you are ready.",
   "slideSettings": {
