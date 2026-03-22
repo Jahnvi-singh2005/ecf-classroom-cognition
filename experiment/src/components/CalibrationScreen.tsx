@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CalibrationScreenProps {
     /** Duration of the flicker in seconds */
@@ -21,8 +21,6 @@ export default function CalibrationScreen({
 }: CalibrationScreenProps) {
     const [isWhite, setIsWhite] = useState(false);
     const [countdown, setCountdown] = useState(durationSeconds);
-    const onCompleteRef = useRef(onComplete);
-    onCompleteRef.current = onComplete;
 
     // Flicker effect — toggle every 100ms (10 Hz)
     useEffect(() => {
@@ -48,11 +46,11 @@ export default function CalibrationScreen({
     // End calibration after the configured duration
     useEffect(() => {
         const timeout = setTimeout(() => {
-            onCompleteRef.current();
+            onComplete();
         }, durationSeconds * 1000);
 
         return () => clearTimeout(timeout);
-    }, [durationSeconds]);
+    }, [durationSeconds, onComplete]);
 
     return (
         <div

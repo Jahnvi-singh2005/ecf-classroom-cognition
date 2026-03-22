@@ -396,7 +396,7 @@ export default function PostAssessment({
                                     key={option.id}
                                     type="button"
                                     onClick={() => handleMcqSelection(option.id)}
-                                    className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${selected
+                                    className={`w-full text-left rounded-xl border px-4 py-3 transition-all cursor-pointer ${selected
                                         ? 'border-primary-400 bg-primary-50 text-primary-900'
                                         : 'border-surface-200 bg-white hover:bg-surface-50'
                                         }`}
@@ -496,7 +496,14 @@ export default function PostAssessment({
                     )}
                 </div>
 
-                <div className="mt-5 h-2 bg-surface-100 rounded-full overflow-hidden">
+                <div
+                    className="mt-5 h-2 bg-surface-100 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-label="Question timer"
+                    aria-valuemin={0}
+                    aria-valuemax={maxQuestionMs}
+                    aria-valuenow={Math.min(elapsedMs, maxQuestionMs)}
+                >
                     <div
                         className={`h-full transition-all duration-100 ${elapsedMs < minQuestionMs ? 'bg-warning' : 'bg-accent'}`}
                         style={{ width: `${Math.min((elapsedMs / maxQuestionMs) * 100, 100)}%` }}

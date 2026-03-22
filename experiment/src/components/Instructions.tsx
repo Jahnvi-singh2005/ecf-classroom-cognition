@@ -4,6 +4,21 @@ interface InstructionsProps {
 }
 
 export default function Instructions({ instructions, onBegin }: InstructionsProps) {
+    const renderBoldSegments = (line: string) => {
+        const segments = line.split(/(\*\*.*?\*\*)/g);
+        return segments.map((segment, index) => {
+            if (segment.startsWith('**') && segment.endsWith('**') && segment.length >= 4) {
+                return (
+                    <strong key={`bold-${index}`} className="font-semibold text-surface-900">
+                        {segment.slice(2, -2)}
+                    </strong>
+                );
+            }
+
+            return <span key={`text-${index}`}>{segment}</span>;
+        });
+    };
+
     return (
         <div className="h-full min-h-0 flex items-center justify-center p-4 md:p-6 overflow-hidden">
             <div className="w-full max-w-2xl h-full">
@@ -22,10 +37,8 @@ export default function Instructions({ instructions, onBegin }: InstructionsProp
                     <div className="flex-1 min-h-0 bg-surface-50/80 rounded-2xl p-5 md:p-6 mb-5 md:mb-6 text-surface-700 leading-relaxed text-sm space-y-2.5 border border-surface-100 overflow-hidden">
                         {instructions.split('\n').map((line, i) => {
                             if (!line.trim()) return <div key={i} className="h-2" />;
-                            // Bold markers
-                            const rendered = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-surface-900">$1</strong>');
                             return (
-                                <p key={i} dangerouslySetInnerHTML={{ __html: rendered }} />
+                                <p key={i}>{renderBoldSegments(line)}</p>
                             );
                         })}
                     </div>

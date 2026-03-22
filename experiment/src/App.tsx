@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import './index.css';
 import type {
   ExperimentConfig,
@@ -16,13 +16,14 @@ import { RecordingService } from './services/RecordingService';
 import { buildParticipantKey, getProjectSettings, getStoredSettingsPassword, saveExperimentSession, saveProjectSettings } from './services/ExperimentDataService';
 import { hasFirebaseConfig } from './services/firebase';
 import Registration from './components/Registration';
-import ExperimentSettings from './components/ExperimentSettings';
 import Instructions from './components/Instructions';
 import CalibrationScreen from './components/CalibrationScreen';
 import ReadingSlide from './components/ReadingSlide';
-import PostAssessment from './components/PostAssessment';
 import Completion from './components/Completion';
-import HistoryPage from './components/HistoryPage';
+
+const ExperimentSettings = lazy(() => import('./components/ExperimentSettings'));
+const HistoryPage = lazy(() => import('./components/HistoryPage'));
+const PostAssessment = lazy(() => import('./components/PostAssessment'));
 
 const DEFAULT_POST_ASSESSMENT_SETTINGS: PostAssessmentSettings = {
   thinkingMinSeconds: 8,
@@ -144,21 +145,21 @@ function App() {
 
         try {
           const remoteConfig = await getProjectSettings();
-          
+
           if (remoteConfig) {
             const localVersion = localConfig.version || 0;
             const remoteVersion = remoteConfig.version || 0;
-            
+
             if (localVersion > remoteVersion) {
               console.log(`[Config Migration] Local version (${localVersion}) > Remote version (${remoteVersion}). Migrating Firebase database.`);
               const password = await getStoredSettingsPassword();
               await saveProjectSettings(localConfig, password || 'pass123');
               return localConfig;
             }
-            
+
             return remoteConfig;
           }
-          
+
           return localConfig;
         } catch (e) {
           console.error('[Config Error] Failed to fetch or migrate remote config:', e);
@@ -376,16 +377,8 @@ function App() {
         setPhase('completed');
       }
 
-      // Log collected data to console
-      console.log('=== EXPERIMENT DATA ===');
-      console.log('Participant:', participant);
-      console.log('Condition:', assignedCondition);
-      console.log('Assessments:', {
-        ...allAnswersRef.current,
-        [currentText.id]: result,
-      });
     }
-  }, [currentText, config, currentTextIndex, participant, assignedCondition, persistSession]);
+  }, [currentText, config, currentTextIndex, persistSession]);
 
   // Post-calibration done → stop recordings, move to completed
   const handlePostCalibrationComplete = useCallback(() => {
@@ -495,15 +488,31 @@ function App() {
       <main className="flex-1 min-h-0 overflow-hidden">
         {/* Phase Content */}
         {pathname === '/settings' && !experimentStarted && (
-          <ExperimentSettings
-            initialConfig={config}
-            onContinue={handleSettingsContinue}
-            onBack={() => navigate('/')}
-          />
+          <Suspense
+            fallback={(
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-sm text-surface-500">Loading settings…</p>
+              </div>
+            )}
+          >
+            <ExperimentSettings
+              initialConfig={config}
+              onContinue={handleSettingsContinue}
+              onBack={() => navigate('/')}
+            />
+          </Suspense>
         )}
 
         {pathname === '/history' && !experimentStarted && (
-          <HistoryPage onBack={() => navigate('/')} />
+          <Suspense
+            fallback={(
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-sm text-surface-500">Loading history…</p>
+              </div>
+            )}
+          >
+            <HistoryPage onBack={() => navigate('/')} />
+          </Suspense>
         )}
 
         {pathname === '/' && phase === 'registration' && (
@@ -587,14 +596,22 @@ function App() {
         )}
 
         {pathname === '/' && phase === 'assessment' && currentText && (
-          <PostAssessment
-            textId={currentText.id}
-            textTitle={currentText.title}
-            questions={currentAssessmentQuestions}
-            feedbackQuestions={currentFeedbackQuestions}
-            settings={postAssessmentSettings}
-            onSubmit={handleAssessmentSubmit}
-          />
+          <Suspense
+            fallback={(
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-sm text-surface-500">Loading assessment…</p>
+              </div>
+            )}
+          >
+            <PostAssessment
+              textId={currentText.id}
+              textTitle={currentText.title}
+              questions={currentAssessmentQuestions}
+              feedbackQuestions={currentFeedbackQuestions}
+              settings={postAssessmentSettings}
+              onSubmit={handleAssessmentSubmit}
+            />
+          </Suspense>
         )}
 
         {pathname === '/' && phase === 'post-calibration' && (

@@ -23,23 +23,34 @@ export default function ReadingSlide({
     maxTimeSeconds,
     onNext,
 }: ReadingSlideProps) {
-    const [elapsed, setElapsed] = useState(0);
+    const [elapsedMs, setElapsedMs] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const hasAutoAdvanced = useRef(false);
-    const canProceed = elapsed >= minTimeSeconds;
+    const tickMs = 100;
+
+    // Guard against invalid timer configuration so unlock always happens before auto-advance.
+    const safeMaxSeconds = Math.max(maxTimeSeconds, 1);
+    const safeMinSeconds = Math.min(Math.max(minTimeSeconds, 0), Math.max(safeMaxSeconds - 0.1, 0));
+    const maxTimeMs = Math.round(safeMaxSeconds * 1000);
+    const minTimeMs = Math.round(safeMinSeconds * 1000);
+    const hasAdjustedTiming = safeMinSeconds !== minTimeSeconds || safeMaxSeconds !== maxTimeSeconds;
+
+    const canProceed = elapsedMs >= minTimeMs;
 
     // Start timer for this slide
     useEffect(() => {
         hasAutoAdvanced.current = false;
+        const startedAt = performance.now();
 
         intervalRef.current = setInterval(() => {
-            setElapsed((prev) => prev + 1);
-        }, 1000);
+            const nextElapsed = Math.min(Math.round(performance.now() - startedAt), maxTimeMs);
+            setElapsedMs(nextElapsed);
+        }, tickMs);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [slideIndex, textIndex]);
+    }, [slideIndex, textIndex, maxTimeMs]);
 
     // Auto-advance after max time
     const handleAutoAdvance = useCallback(() => {
@@ -56,10 +67,10 @@ export default function ReadingSlide({
     }, [canProceed, onNext]);
 
     useEffect(() => {
-        if (elapsed >= maxTimeSeconds) {
+        if (elapsedMs >= maxTimeMs) {
             handleAutoAdvance();
         }
-    }, [elapsed, maxTimeSeconds, handleAutoAdvance]);
+    }, [elapsedMs, maxTimeMs, handleAutoAdvance]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -78,10 +89,13 @@ export default function ReadingSlide({
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [handleManualAdvance]);
 
-    const progressPercent = Math.min((elapsed / maxTimeSeconds) * 100, 100);
-    const minProgressPercent = (minTimeSeconds / maxTimeSeconds) * 100;
-    const remainingToMin = Math.max(minTimeSeconds - elapsed, 0);
-    const remainingToMax = Math.max(maxTimeSeconds - elapsed, 0);
+    const progressRatio = Math.min(Math.max(elapsedMs / maxTimeMs, 0), 1);
+    const progressPercent = progressRatio * 100;
+    const minProgressPercent = (minTimeMs / maxTimeMs) * 100;
+    const remainingToMin = Math.max(minTimeMs - elapsedMs, 0);
+    const remainingToMax = Math.max(maxTimeMs - elapsedMs, 0);
+    const remainingToMinSeconds = Math.max(0, Math.ceil(remainingToMin / 1000));
+    const remainingToMaxSeconds = Math.max(0, Math.ceil(remainingToMax / 1000));
 
     // Render text paragraphs (split on newlines)
     const paragraphs = text.split('\n').filter((p) => p.trim());
@@ -156,7 +170,15 @@ export default function ReadingSlide({
             {/* Timer & Controls Bar */}
             <div className="mt-4 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 p-4">
                 {/* Progress Bar */}
-                <div className="relative h-2 bg-surface-100 rounded-full mb-3 overflow-hidden">
+                <div
+                    className="relative h-2 bg-surface-100 rounded-full mb-3 overflow-hidden"
+                    role="progressbar"
+                    aria-label="Slide reading timer"
+                    aria-valuemin={0}
+                    aria-valuemax={maxTimeMs}
+                    aria-valuenow={Math.min(elapsedMs, maxTimeMs)}
+                    aria-valuetext={`${Math.ceil(elapsedMs / 1000)} of ${Math.ceil(maxTimeMs / 1000)} seconds`}
+                >
                     {/* Min-time marker */}
                     <div
                         className="absolute top-0 bottom-0 w-0.5 bg-surface-400 z-10"
@@ -164,7 +186,7 @@ export default function ReadingSlide({
                     />
                     {/* Progress fill */}
                     <div
-                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-linear ${elapsed < minTimeSeconds
+                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-100 ease-linear ${elapsedMs < minTimeMs
                             ? 'bg-linear-to-r from-warning to-yellow-400'
                             : 'bg-linear-to-r from-accent to-primary-400'
                             }`}
@@ -177,12 +199,12 @@ export default function ReadingSlide({
                         {!canProceed ? (
                             <span className="flex items-center gap-1.5">
                                 <span className="inline-block w-2 h-2 rounded-full bg-warning animate-pulse" />
-                                Next available in <strong className="text-surface-700">{remainingToMin}s</strong>
+                                Next available in <strong className="text-surface-700">{remainingToMinSeconds}s</strong>
                             </span>
                         ) : (
                             <span className="flex items-center gap-1.5">
                                 <span className="inline-block w-2 h-2 rounded-full bg-accent" />
-                                Auto-advance in <strong className="text-surface-700">{remainingToMax}s</strong>
+                                Auto-advance in <strong className="text-surface-700">{remainingToMaxSeconds}s</strong>
                             </span>
                         )}
                     </div>
@@ -200,6 +222,9 @@ export default function ReadingSlide({
                 </div>
                 {canProceed && (
                     <p className="mt-2 text-right text-[11px] text-surface-400">Tip: Press Spacebar to continue</p>
+                )}
+                {hasAdjustedTiming && (
+                    <p className="mt-1 text-right text-[11px] text-amber-600">Timing was adjusted to keep min-time below max-time.</p>
                 )}
             </div>
         </div>
