@@ -4,7 +4,9 @@ interface RegistrationProps {
     onSubmit: (data: { name: string; age: number; email?: string; notes?: string }) => void;
 }
 
-export default function Registration({ onSubmit }: RegistrationProps) {
+export default function Registration({
+    onSubmit,
+}: RegistrationProps) {
     const [name, setName] = useState('');
     const [age, setAge] = useState('');
     const [email, setEmail] = useState('');
@@ -48,21 +50,21 @@ export default function Registration({ onSubmit }: RegistrationProps) {
         }`;
 
     return (
-        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="min-h-full overflow-y-auto flex items-center justify-center p-3 md:p-6">
             <div className="w-full max-w-lg">
-                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-primary-200/30 border border-white/50 p-8 md:p-10">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-primary-200/30 border border-white/50 p-5 md:p-10">
                     {/* Header */}
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-6 md:mb-8">
                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-linear-to-br from-primary-400 to-primary-600 text-white mb-4 shadow-lg shadow-primary-300/40">
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
-                        <h1 className="text-2xl font-bold text-surface-900">Participant Registration</h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-surface-900">Participant Registration</h1>
                         <p className="text-surface-500 mt-1.5 text-sm">Please fill in your details to begin the experiment</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
                         {/* Name */}
                         <div>
                             <label htmlFor="name" className="block text-sm font-semibold text-surface-700 mb-1.5">

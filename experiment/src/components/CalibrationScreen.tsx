@@ -7,6 +7,8 @@ interface CalibrationScreenProps {
     onComplete: () => void;
     /** Label shown on screen, e.g. "PRE-CALIBRATION" */
     label: string;
+    /** Optional control to skip calibration */
+    onSkip?: () => void;
 }
 
 /**
@@ -18,7 +20,15 @@ export default function CalibrationScreen({
     durationSeconds,
     onComplete,
     label,
+    // onSkip,
 }: CalibrationScreenProps) {
+    const formatClock = (seconds: number): string => {
+        const safeSeconds = Math.max(0, Math.ceil(seconds));
+        const minutes = Math.floor(safeSeconds / 60);
+        const secs = safeSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    };
+
     const [isWhite, setIsWhite] = useState(false);
     const [countdown, setCountdown] = useState(durationSeconds);
 
@@ -57,9 +67,18 @@ export default function CalibrationScreen({
             className="calibration-overlay"
             style={{ backgroundColor: isWhite ? '#FFFFFF' : '#000000' }}
         >
+            {/* {onSkip && (
+                <button
+                    type="button"
+                    onClick={onSkip}
+                    className="absolute top-4 right-4 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/85 text-surface-800 hover:bg-white transition-all"
+                >
+                    Skip calibration
+                </button>
+            )} */}
             <div className="calibration-label" style={{ color: isWhite ? '#000' : '#FFF' }}>
                 <div className="calibration-title">{label}</div>
-                <div className="calibration-countdown">{countdown}s remaining</div>
+                <div className="calibration-countdown">{formatClock(countdown)} remaining</div>
             </div>
         </div>
     );

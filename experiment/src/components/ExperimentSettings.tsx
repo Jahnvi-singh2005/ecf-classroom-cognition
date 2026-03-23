@@ -622,6 +622,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
     };
 
     const inputCls = 'w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-700 outline-none focus:ring-3 focus:ring-primary-100 focus:border-primary-400';
+    const fieldLabelCls = 'block text-[11px] font-semibold uppercase tracking-wide text-surface-500 mb-1';
     const variantButtonCls = (isActive: boolean) => `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isActive
         ? 'bg-primary-600 text-white'
         : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
@@ -632,12 +633,12 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
         }`;
 
     return (
-        <div className="h-full min-h-0 flex items-center justify-center p-4 md:p-6 overflow-hidden">
-            <div className="w-full max-w-6xl h-full panel p-6 md:p-8 flex flex-col min-h-0">
-                <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
+        <div className="min-h-full overflow-y-auto flex items-start justify-center p-3 md:p-6">
+            <div className="w-full max-w-7xl min-h-0 panel p-4 md:p-8 flex flex-col gap-4 md:gap-5">
+                <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                         <span className="chip">Experiment setup</span>
-                        <h2 className="text-2xl font-semibold text-surface-900 mt-3">Customize Experiment Settings</h2>
+                        <h2 className="text-xl md:text-2xl font-semibold text-surface-900 mt-3">Customize Experiment Settings</h2>
                         <p className="text-sm text-surface-500 mt-1">Tune runtime behavior and manage experiment content before participants begin.</p>
                     </div>
                     <div className="text-xs text-surface-500 bg-surface-50 border border-surface-200 rounded-xl px-3 py-2">
@@ -645,13 +646,13 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 mb-5">
+                <div className="flex flex-wrap items-center gap-2">
                     <button type="button" onClick={() => setTab('general')} className={tabButtonCls(tab === 'general')}>General settings</button>
                     <button type="button" onClick={() => setTab('content')} className={tabButtonCls(tab === 'content')}>Content editor</button>
                 </div>
 
                 {tab === 'general' && (
-                    <div className="grid md:grid-cols-2 gap-6 flex-1 min-h-0 overflow-auto pr-1">
+                    <div className="grid md:grid-cols-2 gap-4 md:gap-6 min-h-0 overflow-auto pr-1">
                         <div className="space-y-4 rounded-2xl border border-surface-200 bg-white/70 p-5">
                             <h3 className="text-sm font-semibold text-surface-800">General</h3>
 
@@ -739,7 +740,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                 )}
 
                 {tab === 'content' && selectedText && (
-                    <div className="flex-1 min-h-0 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-4 overflow-hidden">
+                    <div className="min-h-0 grid xl:grid-cols-[300px_minmax(0,1fr)] gap-3 md:gap-4 overflow-hidden">
                         <div className="rounded-2xl border border-surface-200 bg-white/70 p-4 overflow-auto">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-semibold text-surface-800">Texts</h3>
@@ -801,7 +802,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
 
                             <div className="grid md:grid-cols-2 gap-3 mb-4">
                                 <div>
-                                    <label className="block text-xs text-surface-500 mb-1">Text ID</label>
+                                    <label className={fieldLabelCls}>Text ID (internal key)</label>
                                     <input
                                         className={inputCls}
                                         value={selectedText.id}
@@ -809,7 +810,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-surface-500 mb-1">Text title</label>
+                                    <label className={fieldLabelCls}>Text title (shown to participant)</label>
                                     <input
                                         className={inputCls}
                                         value={selectedText.title}
@@ -834,9 +835,9 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                                         const options = normalizeObjectiveOptions(question.options);
 
                                         return (
-                                            <div key={question.id} className="rounded-lg border border-surface-200 p-3 bg-white">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs font-semibold text-surface-600">Q{idx + 1}</span>
+                                            <div key={question.id} className="rounded-xl border border-surface-200 p-3 md:p-4 bg-white space-y-3">
+                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary-50 text-primary-700 text-xs font-semibold">Question {idx + 1}</span>
                                                     <div className="flex gap-1">
                                                         <button type="button" onClick={() => moveAssessmentQuestion(idx, 'up')} className="px-2 py-0.5 text-[11px] rounded bg-surface-100">↑</button>
                                                         <button type="button" onClick={() => moveAssessmentQuestion(idx, 'down')} className="px-2 py-0.5 text-[11px] rounded bg-surface-100">↓</button>
@@ -844,100 +845,129 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                                                     </div>
                                                 </div>
 
-                                                <div className="grid md:grid-cols-2 gap-2 mb-2">
-                                                    <input
-                                                        className={inputCls}
-                                                        value={question.heading || `QUESTION - ${idx + 1}`}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, heading: e.target.value }))}
-                                                        placeholder="QUESTION - 1"
-                                                    />
-                                                    <select
-                                                        className={inputCls}
-                                                        value={isObjective ? 'objective' : 'short-answer'}
-                                                        onChange={(e) => updateQuestionType(idx, e.target.value === 'objective' ? 'objective' : 'short-answer')}
-                                                    >
-                                                        <option value="objective">Objective (MCQ)</option>
-                                                        <option value="short-answer">Short answer</option>
-                                                    </select>
+                                                <div className="grid md:grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className={fieldLabelCls}>Heading</label>
+                                                        <input
+                                                            className={inputCls}
+                                                            value={question.heading || `QUESTION - ${idx + 1}`}
+                                                            onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, heading: e.target.value }))}
+                                                            placeholder="QUESTION - 1"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className={fieldLabelCls}>Question type</label>
+                                                        <select
+                                                            className={inputCls}
+                                                            value={isObjective ? 'objective' : 'short-answer'}
+                                                            onChange={(e) => updateQuestionType(idx, e.target.value === 'objective' ? 'objective' : 'short-answer')}
+                                                        >
+                                                            <option value="objective">Objective (MCQ)</option>
+                                                            <option value="short-answer">Short answer</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
 
-                                                <textarea
-                                                    rows={2}
-                                                    value={question.question}
-                                                    onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, question: e.target.value }))}
-                                                    className={`${inputCls} resize-none mb-2`}
-                                                    placeholder="Question prompt"
-                                                />
-
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        className={inputCls}
-                                                        value={question.minSeconds ?? ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, minSeconds: Number(e.target.value) || undefined }))}
-                                                        placeholder="Min sec"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        className={inputCls}
-                                                        value={question.maxSeconds ?? ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, maxSeconds: Number(e.target.value) || undefined }))}
-                                                        placeholder="Max sec"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        className={inputCls}
-                                                        value={question.minWords ?? ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, minWords: Number(e.target.value) || undefined }))}
-                                                        placeholder="Min words"
-                                                        disabled={isObjective}
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        className={inputCls}
-                                                        value={question.maxWords ?? ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, maxWords: Number(e.target.value) || undefined }))}
-                                                        placeholder="Max words"
-                                                        disabled={isObjective}
+                                                <div>
+                                                    <label className={fieldLabelCls}>Prompt</label>
+                                                    <textarea
+                                                        rows={2}
+                                                        value={question.question}
+                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, question: e.target.value }))}
+                                                        className={`${inputCls} resize-none`}
+                                                        placeholder="Question prompt"
                                                     />
                                                 </div>
 
-                                                <div className="grid md:grid-cols-2 gap-2 mb-2">
-                                                    <input
-                                                        type="number"
-                                                        min={1}
-                                                        className={inputCls}
-                                                        value={question.wordLimit ?? ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, wordLimit: Number(e.target.value) || undefined }))}
-                                                        placeholder="Word limit"
-                                                        disabled={isObjective}
-                                                    />
-                                                    <input
-                                                        className={inputCls}
-                                                        value={question.notes?.join(' | ') || ''}
-                                                        onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({
-                                                            ...item,
-                                                            notes: e.target.value.trim() ? e.target.value.split('|').map((note) => note.trim()).filter(Boolean) : undefined,
-                                                        }))}
-                                                        placeholder="Notes (use | to separate)"
-                                                    />
+                                                <div className="rounded-lg border border-surface-100 bg-surface-50 p-3">
+                                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500 mb-2">Timing and response constraints</p>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Min seconds</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                className={inputCls}
+                                                                value={question.minSeconds ?? ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, minSeconds: Number(e.target.value) || undefined }))}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Max seconds</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                className={inputCls}
+                                                                value={question.maxSeconds ?? ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, maxSeconds: Number(e.target.value) || undefined }))}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Min words</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                className={inputCls}
+                                                                value={question.minWords ?? ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, minWords: Number(e.target.value) || undefined }))}
+                                                                disabled={isObjective}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Max words</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                className={inputCls}
+                                                                value={question.maxWords ?? ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, maxWords: Number(e.target.value) || undefined }))}
+                                                                disabled={isObjective}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid md:grid-cols-2 gap-2 mt-2">
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Hard word limit</label>
+                                                            <input
+                                                                type="number"
+                                                                min={1}
+                                                                className={inputCls}
+                                                                value={question.wordLimit ?? ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({ ...item, wordLimit: Number(e.target.value) || undefined }))}
+                                                                disabled={isObjective}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className={fieldLabelCls}>Coach notes (optional)</label>
+                                                            <input
+                                                                className={inputCls}
+                                                                value={question.notes?.join(' | ') || ''}
+                                                                onChange={(e) => updateAssessmentQuestionAt(idx, (item) => ({
+                                                                    ...item,
+                                                                    notes: e.target.value.trim() ? e.target.value.split('|').map((note) => note.trim()).filter(Boolean) : undefined,
+                                                                }))}
+                                                                placeholder="Use | to separate notes"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 {isObjective && (
-                                                    <div className="grid md:grid-cols-2 gap-2">
-                                                        {options.map((option, optionIndex) => (
-                                                            <input
-                                                                key={`${question.id}-${option.id}`}
-                                                                className={inputCls}
-                                                                value={option.text}
-                                                                onChange={(e) => updateQuestionOption(idx, optionIndex, e.target.value)}
-                                                                placeholder={`${option.label || option.id}) option text`}
-                                                            />
-                                                        ))}
+                                                    <div>
+                                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500 mb-2">Answer options</p>
+                                                        <div className="grid md:grid-cols-2 gap-2">
+                                                            {options.map((option, optionIndex) => (
+                                                                <div key={`${question.id}-${option.id}`}>
+                                                                    <label className={fieldLabelCls}>{option.label || option.id}</label>
+                                                                    <input
+                                                                        className={inputCls}
+                                                                        value={option.text}
+                                                                        onChange={(e) => updateQuestionOption(idx, optionIndex, e.target.value)}
+                                                                        placeholder={`${option.label || option.id}) option text`}
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -1023,9 +1053,9 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                     </div>
                 )}
 
-                <div className="mt-7 flex flex-wrap items-end justify-between gap-3">
-                    <div className="min-w-70">
-                        <label className="block text-xs text-surface-500 mb-1">Settings password</label>
+                <div className="pt-2 md:pt-3 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+                    <div className="w-full md:max-w-sm">
+                        <label className={fieldLabelCls}>Settings password</label>
                         <input
                             type="password"
                             value={settingsPassword}
@@ -1038,11 +1068,11 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                         )}
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3">
                         <button
                             type="button"
                             onClick={onBack}
-                            className="px-5 py-3 rounded-xl bg-surface-100 text-surface-700 font-semibold text-sm hover:bg-surface-200 transition-all cursor-pointer mr-3"
+                            className="px-4 md:px-5 py-3 rounded-xl bg-surface-100 text-surface-700 font-semibold text-sm hover:bg-surface-200 transition-all cursor-pointer"
                         >
                             Back
                         </button>
@@ -1050,7 +1080,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                             type="button"
                             onClick={handleContinue}
                             disabled={isSaving}
-                            className="px-7 py-3 rounded-xl bg-linear-to-r from-primary-500 to-primary-600 text-white font-semibold text-sm shadow-lg shadow-primary-400/30 hover:shadow-xl hover:shadow-primary-400/40 active:scale-[0.98] transition-all cursor-pointer"
+                            className="px-5 md:px-7 py-3 rounded-xl bg-linear-to-r from-primary-500 to-primary-600 text-white font-semibold text-sm shadow-lg shadow-primary-400/30 hover:shadow-xl hover:shadow-primary-400/40 active:scale-[0.98] transition-all cursor-pointer"
                         >
                             {isSaving ? 'Saving...' : 'Save settings & continue'}
                         </button>

@@ -47,6 +47,12 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -132,7 +138,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  overflow-y: auto;
 }
 
 .permission-card {
@@ -144,7 +151,7 @@ body {
   border-radius: 1.5rem;
   box-shadow: 0 20px 40px -12px rgba(100, 100, 200, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  padding: 2.5rem;
+  padding: clamp(1.25rem, 2.8vw, 2.5rem);
 }
 
 .permission-icon {
@@ -178,4 +185,38 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #dc2626;
   font-size: 0.8125rem;
+}
+
+@media (max-width: 1024px) {
+  .calibration-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+  }
+
+  .calibration-countdown {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    min-height: 100dvh;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  .panel {
+    border-radius: 1.2rem;
+  }
+
+  .permission-card {
+    border-radius: 1.2rem;
+  }
+
+  .calibration-title {
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+  }
 }

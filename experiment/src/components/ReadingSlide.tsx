@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 interface ReadingSlideProps {
     text: string;
@@ -23,6 +23,13 @@ export default function ReadingSlide({
     maxTimeSeconds,
     onNext,
 }: ReadingSlideProps) {
+    const formatClock = (ms: number): string => {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
     const [elapsedMs, setElapsedMs] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const hasAutoAdvanced = useRef(false);
@@ -94,25 +101,50 @@ export default function ReadingSlide({
     const minProgressPercent = (minTimeMs / maxTimeMs) * 100;
     const remainingToMin = Math.max(minTimeMs - elapsedMs, 0);
     const remainingToMax = Math.max(maxTimeMs - elapsedMs, 0);
-    const remainingToMinSeconds = Math.max(0, Math.ceil(remainingToMin / 1000));
-    const remainingToMaxSeconds = Math.max(0, Math.ceil(remainingToMax / 1000));
 
-    // Render text paragraphs (split on newlines)
-    const paragraphs = text.split('\n').filter((p) => p.trim());
+    const renderedParagraphs = useMemo(() => {
+        // Parse slide text only when the text itself changes.
+        const paragraphs = text.split('\n').filter((p) => p.trim());
+        return paragraphs.map((para, i) => {
+            const isHeading = /^(\d+\.?\s|#+\s)/.test(para.trim());
+            if (isHeading) {
+                return (
+                    <h3 key={i} className="text-base md:text-lg font-bold text-surface-900 mt-3 mb-2 first:mt-0">
+                        {para.replace(/^#+\s/, '')}
+                    </h3>
+                );
+            }
+
+            if (/^[•*-]\s/.test(para.trim())) {
+                return (
+                    <p key={i} className="text-surface-700 leading-relaxed text-[14px] md:text-[15px] pl-4 py-0.5">
+                        <span className="text-primary-400 mr-2">•</span>
+                        {para.replace(/^[•*-]\s/, '')}
+                    </p>
+                );
+            }
+
+            return (
+                <p key={i} className="text-surface-700 leading-[1.7] text-[14px] md:text-[15px] mb-2.5">
+                    {para}
+                </p>
+            );
+        });
+    }, [text]);
 
     return (
-        <div className="flex-1 flex flex-col p-4 md:p-6 max-w-4xl mx-auto w-full">
+        <div className="h-full min-h-0 flex flex-col p-3 md:p-4 max-w-5xl mx-auto w-full overflow-hidden">
             {/* Top Bar */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 shrink-0">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0">
                     <span className="inline-flex items-center px-3 py-1 rounded-lg bg-primary-100 text-primary-700 text-xs font-semibold">
                         Text {textIndex + 1}/{totalTexts}
                     </span>
-                    <span className="text-sm text-surface-500 font-medium">
+                    <span className="text-xs md:text-sm text-surface-500 font-medium truncate max-w-[42vw] md:max-w-none">
                         {textTitle}
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                     <span className="text-xs text-surface-400 font-medium">
                         Slide {slideIndex + 1} of {totalSlides}
                     </span>
@@ -120,7 +152,7 @@ export default function ReadingSlide({
             </div>
 
             {/* Slide Dots */}
-            <div className="flex items-center gap-1.5 mb-4 justify-center">
+            <div className="flex items-center gap-1.5 mb-3 justify-center shrink-0">
                 {Array.from({ length: totalSlides }).map((_, i) => (
                     <div
                         key={i}
@@ -135,40 +167,24 @@ export default function ReadingSlide({
             </div>
 
             {/* Main Reading Card */}
-            <div className="flex-1 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-primary-200/20 border border-white/50 p-6 md:p-10 flex flex-col">
-                <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-primary-200/20 border border-white/50 p-4 md:p-7 flex flex-col overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1">
                     <div className="prose prose-surface max-w-none">
-                        {paragraphs.map((para, i) => {
-                            // Check if it's a heading-like line (starts with a number or all caps)
-                            const isHeading = /^(\d+\.?\s|#+\s)/.test(para.trim());
-                            if (isHeading) {
-                                return (
-                                    <h3 key={i} className="text-lg font-bold text-surface-900 mt-4 mb-2 first:mt-0">
-                                        {para.replace(/^#+\s/, '')}
-                                    </h3>
-                                );
-                            }
-                            // Check if it's a bullet point
-                            if (/^[•*-]\s/.test(para.trim())) {
-                                return (
-                                    <p key={i} className="text-surface-700 leading-relaxed text-[15px] pl-4 py-0.5">
-                                        <span className="text-primary-400 mr-2">•</span>
-                                        {para.replace(/^[•*-]\s/, '')}
-                                    </p>
-                                );
-                            }
-                            return (
-                                <p key={i} className="text-surface-700 leading-[1.8] text-[15px] mb-3">
-                                    {para}
-                                </p>
-                            );
-                        })}
+                        {renderedParagraphs}
                     </div>
                 </div>
             </div>
 
             {/* Timer & Controls Bar */}
-            <div className="mt-4 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 p-4">
+            <div className="mt-3 shrink-0 bg-white/75 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 p-3 md:p-3.5">
+                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 font-semibold text-surface-700">
+                        Elapsed {formatClock(elapsedMs)} / {formatClock(maxTimeMs)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 font-semibold text-surface-700">
+                        Unlock at {formatClock(minTimeMs)}
+                    </span>
+                </div>
                 {/* Progress Bar */}
                 <div
                     className="relative h-2 bg-surface-100 rounded-full mb-3 overflow-hidden"
@@ -199,12 +215,12 @@ export default function ReadingSlide({
                         {!canProceed ? (
                             <span className="flex items-center gap-1.5">
                                 <span className="inline-block w-2 h-2 rounded-full bg-warning animate-pulse" />
-                                Next available in <strong className="text-surface-700">{remainingToMinSeconds}s</strong>
+                                Next available in <strong className="text-surface-700">{formatClock(remainingToMin)}</strong>
                             </span>
                         ) : (
                             <span className="flex items-center gap-1.5">
                                 <span className="inline-block w-2 h-2 rounded-full bg-accent" />
-                                Auto-advance in <strong className="text-surface-700">{remainingToMaxSeconds}s</strong>
+                                Auto-advance in <strong className="text-surface-700">{formatClock(remainingToMax)}</strong>
                             </span>
                         )}
                     </div>
@@ -220,9 +236,11 @@ export default function ReadingSlide({
                         {slideIndex === totalSlides - 1 ? 'Finish Reading' : 'Next Slide'} →
                     </button>
                 </div>
-                {canProceed && (
-                    <p className="mt-2 text-right text-[11px] text-surface-400">Tip: Press Spacebar to continue</p>
-                )}
+                <div className="mt-2 min-h-4 text-right">
+                    <p className={`text-[11px] text-surface-400 transition-opacity ${canProceed ? 'opacity-100' : 'opacity-0'}`}>
+                        Tip: Press Spacebar to continue
+                    </p>
+                </div>
                 {hasAdjustedTiming && (
                     <p className="mt-1 text-right text-[11px] text-amber-600">Timing was adjusted to keep min-time below max-time.</p>
                 )}

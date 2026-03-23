@@ -127,6 +127,45 @@ export interface TextAssessmentResult {
     submittedAt: number;
 }
 
+export interface AssessmentDraftState {
+    textId: string;
+    textTitle: string;
+    stage: 'subjective' | 'feedback';
+    index: number;
+    mode: 'thinking' | 'typing';
+    elapsedMs: number;
+    activeQuestionId: string;
+    activeQuestionType: 'mcq' | 'objective' | 'short-answer';
+    activeQuestionPrompt: string;
+    activeQuestionResponse: string;
+    activeQuestionSelectedOptionId: string | null;
+    activeQuestionT1QuestionShown: number;
+    activeQuestionT2TypingStarted: number | null;
+    activeQuestionT3FirstKeypress: number | null;
+    responses: SubjectiveResponse[];
+    ratings: Record<string, number>;
+    updatedAt: number;
+}
+
+export interface ExperimentSessionDraft {
+    sessionId: string;
+    participantKey: string;
+    participant: Participant;
+    experimentTitle: string;
+    assignedCondition: GroupCondition;
+    startedAt: number;
+    lastUpdatedAt: number;
+    lastSyncedAt: number;
+    status: 'in-progress' | 'completed' | 'abandoned';
+    calibrationEnabled: boolean;
+    totalTexts: number;
+    phase: ExperimentPhase;
+    currentTextIndex: number;
+    currentSlideIndex: number;
+    assessments: Record<string, TextAssessmentResult>;
+    activeAssessment?: AssessmentDraftState;
+}
+
 export interface ExperimentState {
     phase: ExperimentPhase;
     participant: Participant | null;
