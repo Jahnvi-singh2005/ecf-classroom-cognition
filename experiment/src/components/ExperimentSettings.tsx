@@ -34,14 +34,21 @@ const cloneTexts = (texts: TextConfig[]): TextConfig[] => texts.map((text) => ({
     subjectiveQuestions: text.subjectiveQuestions ? [...text.subjectiveQuestions] : [],
 }));
 
+
+const VARIANT_GROUP_LABEL: Record<VariantType, string> = {
+    passive: 'Group 1',
+    active: 'Group 2',
+    constructive: 'Group 3',
+    control: 'Group 4',
+};
 const createText = (index: number): TextConfig => ({
     id: `text-${index + 1}`,
     title: `New Text ${index + 1}`,
     variants: [
-        { type: 'passive', slides: ['New passive slide'] },
-        { type: 'active', slides: ['New active slide'] },
-        { type: 'constructive', slides: ['New constructive slide'] },
-        { type: 'control', slides: ['New control slide'] },
+        { type: 'passive', slides: ['New Group 1 slide'] },
+        { type: 'active', slides: ['New Group 2 slide'] },
+        { type: 'constructive', slides: ['New Group 3 slide'] },
+        { type: 'control', slides: ['New Group 4 slide'] },
     ],
     questions: [],
     subjectiveQuestions: [
@@ -328,7 +335,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                     if (variant.type !== selectedVariantType) return variant;
                     return {
                         ...variant,
-                        slides: [...variant.slides, `New ${selectedVariantType} slide`],
+                        slides: [...variant.slides, `New ${VARIANT_GROUP_LABEL[selectedVariantType]} slide`],
                     };
                 }),
             };
@@ -1020,7 +1027,7 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                                             onClick={() => setSelectedVariantType(variant)}
                                             className={variantButtonCls(selectedVariantType === variant)}
                                         >
-                                            {variant}
+                                            {VARIANT_GROUP_LABEL[variant]}
                                         </button>
                                     ))}
                                 </div>

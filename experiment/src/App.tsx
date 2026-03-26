@@ -481,10 +481,10 @@ function App() {
     ? (variantOrder[currentTextIndex % variantOrder.length] || 'active')
     : 'active';
   const currentVariant = currentText?.variants.find((v) => v.type === targetVariantType)
-    || currentText?.variants.find((v) => v.type === 'active')
-    || currentText?.variants.find((v) => v.type === 'passive')
-    || currentText?.variants.find((v) => v.type === 'constructive')
-    || currentText?.variants.find((v) => v.type === 'control');
+    || variantOrder
+      .map((type) => currentText?.variants.find((v) => v.type === type))
+      .find((v) => Boolean(v))
+    || currentText?.variants[0];
   const currentSlides = currentVariant?.slides || [];
   const currentSubjectiveQuestions = currentText?.subjectiveQuestions?.length
     ? currentText.subjectiveQuestions
