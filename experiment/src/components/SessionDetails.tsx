@@ -14,6 +14,16 @@ const formatDateTime = (timestamp: number): string => {
     }
 };
 
+const formatDateTimeWithMs = (timestamp: number | null | undefined): string => {
+    if (!timestamp) return 'N/A';
+    try {
+        const date = new Date(timestamp);
+        return `${date.toLocaleString()} (${date.getMilliseconds().toString().padStart(3, '0')} ms)`;
+    } catch {
+        return 'Invalid date';
+    }
+};
+
 const formatDuration = (ms: number | null): string => {
     if (ms === null || ms === undefined) return 'N/A';
     const seconds = Math.floor(ms / 1000);
@@ -37,7 +47,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                     type="button"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </button>
                 <div>
@@ -58,20 +68,28 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto min-h-0 pr-2 pb-4 space-y-6">
-                
+
                 {/* Meta Settings Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
+                    <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
                         <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Session ID</span>
                         <span className="mt-1.5 text-sm font-semibold text-surface-800 break-words">{session.sessionId}</span>
-                     </div>
-                     <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
+                    </div>
+                    <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
                         <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Timing</span>
                         <div className="mt-1.5 flex flex-col gap-1 text-sm font-semibold text-surface-800">
                             <span>Started: <span className="font-normal">{formatDateTime(session.startedAt)}</span></span>
                             <span>Ended: <span className="font-normal">{formatDateTime(session.completedAt)}</span></span>
                         </div>
-                     </div>
+                    </div>
+                    <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col sm:col-span-2">
+                        <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Consent</span>
+                        <div className="mt-1.5 text-sm text-surface-800">
+                            {session.consent?.consentGiven
+                                ? `Given at ${formatDateTime(session.consent.consentedAt)} (version ${session.consent.statementVersion})`
+                                : 'Consent record unavailable (older session or consent not captured).'}
+                        </div>
+                    </div>
                 </div>
 
                 {textIds.length === 0 && (
@@ -84,7 +102,10 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                 {textIds.map((textId, index) => {
                     const textData = session.assessments[textId];
                     const feedbackCount = Object.keys(textData.feedbackRatings || {}).length;
-                    
+                    const readingMarkers = [...(session.readingAdvanceMarkers || [])]
+                        .filter((marker) => marker.textId === textId)
+                        .sort((a, b) => a.textIndex - b.textIndex || a.slideIndex - b.slideIndex || a.markedAt - b.markedAt);
+
                     return (
                         <div key={textId} className="bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                             <div className="bg-gradient-to-r from-surface-50 to-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-200">
@@ -97,7 +118,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                     Submitted: {formatDateTime(textData.submittedAt)}
                                 </div>
                             </div>
-                            
+
                             <div className="p-5 space-y-6">
                                 {/* Responses */}
                                 {textData.subjectiveResponses?.length > 0 ? (
@@ -115,7 +136,26 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                                         <div className="bg-white border border-surface-200/80 rounded-lg p-4 text-sm text-surface-700 leading-relaxed shadow-sm min-h-[3rem]">
                                                             {resp.response ? resp.response : <span className="italic text-surface-400">No response provided</span>}
                                                         </div>
-                                                        
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                                            <div className="rounded-lg border border-surface-200 bg-white px-3 py-2">
+                                                                <p className="text-surface-500 font-semibold">T1 Question appears</p>
+                                                                <p className="text-surface-800 mt-1">{formatDateTimeWithMs(resp.timestamps?.t1QuestionShown)}</p>
+                                                            </div>
+                                                            <div className="rounded-lg border border-surface-200 bg-white px-3 py-2">
+                                                                <p className="text-surface-500 font-semibold">T2 Space pressed</p>
+                                                                <p className="text-surface-800 mt-1">{formatDateTimeWithMs(resp.timestamps?.t2TypingStarted)}</p>
+                                                            </div>
+                                                            <div className="rounded-lg border border-surface-200 bg-white px-3 py-2">
+                                                                <p className="text-surface-500 font-semibold">T3 First keypress</p>
+                                                                <p className="text-surface-800 mt-1">{formatDateTimeWithMs(resp.timestamps?.t3FirstKeypress)}</p>
+                                                            </div>
+                                                            <div className="rounded-lg border border-surface-200 bg-white px-3 py-2">
+                                                                <p className="text-surface-500 font-semibold">T4 Submitted</p>
+                                                                <p className="text-surface-800 mt-1">{formatDateTimeWithMs(resp.timestamps?.t4Submitted)}</p>
+                                                            </div>
+                                                        </div>
+
                                                         {/* Metrics for this response */}
                                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold">
                                                             {resp.autoSubmitted && (
@@ -125,8 +165,10 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                                                 </span>
                                                             )}
                                                             <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="Words written">Words: {resp.wordCount}</span>
-                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="Time taken preparing to answer">Thinking: {formatDuration(resp.metrics?.thinkingTimeMs)}</span>
-                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="Time from typing to submitting">Typing: {formatDuration(resp.metrics?.totalResponseTimeMs)}</span>
+                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="T2 - T1">Thinking time: {formatDuration(resp.metrics?.thinkingTimeMs)}</span>
+                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="T3 - T2">First keypress latency: {formatDuration(resp.metrics?.firstKeypressLatencyMs)}</span>
+                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="T4 - T2">Total response time: {formatDuration(resp.metrics?.totalResponseTimeMs)}</span>
+                                                            <span className="text-surface-600 bg-surface-100 px-2.5 py-1 rounded-md border border-surface-200" title="T4 - T1">Total question time: {formatDuration(resp.metrics?.totalQuestionTimeMs)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -135,6 +177,36 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                     </div>
                                 ) : (
                                     <p className="text-sm text-surface-500 italic bg-surface-50 p-4 rounded-xl border border-surface-100">No responses recorded for this text.</p>
+                                )}
+
+                                {readingMarkers.length > 0 && (
+                                    <div className="pt-2">
+                                        <h4 className="text-sm font-bold uppercase tracking-wider text-surface-400 mb-3 ml-1">Reading slide markers</h4>
+                                        <div className="space-y-2">
+                                            {readingMarkers.map((marker, markerIndex) => (
+                                                <div key={`${textId}-${marker.slideIndex}-${marker.markedAt}-${markerIndex}`} className="rounded-xl border border-surface-200 bg-surface-50/70 p-3 text-xs text-surface-700">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                                        <p className="font-semibold text-surface-900">
+                                                            Slide {marker.slideIndex + 1} / {marker.totalSlides}
+                                                        </p>
+                                                        <span className={`inline-flex px-2 py-0.5 rounded-md border ${marker.advancedBy === 'auto-timeout'
+                                                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                            }`}
+                                                        >
+                                                            {marker.advancedBy === 'auto-timeout' ? 'Auto next' : 'Manual next'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                        <span className="bg-white border border-surface-200 rounded-md px-2 py-1">Marked: {formatDateTimeWithMs(marker.markedAt)}</span>
+                                                        <span className="bg-white border border-surface-200 rounded-md px-2 py-1">Elapsed: {formatDuration(marker.elapsedMs)}</span>
+                                                        <span className="bg-white border border-surface-200 rounded-md px-2 py-1">Min: {formatDuration(marker.minTimeMs)}</span>
+                                                        <span className="bg-white border border-surface-200 rounded-md px-2 py-1">Max: {formatDuration(marker.maxTimeMs)}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
 
                                 {/* Feedback */}

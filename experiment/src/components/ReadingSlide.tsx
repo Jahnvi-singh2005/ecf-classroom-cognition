@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { ReadingAdvanceMarker } from '../types';
 
 interface ReadingSlideProps {
+    textId: string;
     text: string;
     slideIndex: number;
     totalSlides: number;
@@ -9,10 +11,11 @@ interface ReadingSlideProps {
     totalTexts: number;
     minTimeSeconds: number;
     maxTimeSeconds: number;
-    onNext: () => void;
+    onNext: (marker: ReadingAdvanceMarker) => void;
 }
 
 export default function ReadingSlide({
+    textId,
     text,
     slideIndex,
     totalSlides,
@@ -44,6 +47,19 @@ export default function ReadingSlide({
 
     const canProceed = elapsedMs >= minTimeMs;
 
+    const buildAdvanceMarker = useCallback((advancedBy: ReadingAdvanceMarker['advancedBy']): ReadingAdvanceMarker => ({
+        textId,
+        textTitle,
+        textIndex,
+        slideIndex,
+        totalSlides,
+        advancedBy,
+        markedAt: Date.now(),
+        elapsedMs: Math.min(elapsedMs, maxTimeMs),
+        minTimeMs,
+        maxTimeMs,
+    }), [elapsedMs, maxTimeMs, minTimeMs, slideIndex, textId, textIndex, textTitle, totalSlides]);
+
     // Start timer for this slide
     useEffect(() => {
         hasAutoAdvanced.current = false;
@@ -63,15 +79,15 @@ export default function ReadingSlide({
     const handleAutoAdvance = useCallback(() => {
         if (!hasAutoAdvanced.current) {
             hasAutoAdvanced.current = true;
-            onNext();
+            onNext(buildAdvanceMarker('auto-timeout'));
         }
-    }, [onNext]);
+    }, [buildAdvanceMarker, onNext]);
 
     const handleManualAdvance = useCallback(() => {
         if (!canProceed || hasAutoAdvanced.current) return;
         hasAutoAdvanced.current = true;
-        onNext();
-    }, [canProceed, onNext]);
+        onNext(buildAdvanceMarker('manual-spacebar-or-next'));
+    }, [buildAdvanceMarker, canProceed, onNext]);
 
     useEffect(() => {
         if (elapsedMs >= maxTimeMs) {

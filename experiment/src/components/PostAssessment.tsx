@@ -316,7 +316,7 @@ export default function PostAssessment({
             return;
         }
 
-        setHint('Typing window open. Press Ctrl + Enter again to submit.');
+        setHint('Typing window open. Press Space (outside the text box) to submit.');
         setMode('typing');
         setActiveQuestion((prev) => ({
             ...prev,
@@ -349,14 +349,18 @@ export default function PostAssessment({
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             if (stage !== 'subjective' || !hasQuestions || isObjectiveQuestion(currentQuestion?.type)) return;
+            if (event.key !== ' ') return;
 
-            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-                event.preventDefault();
-                if (mode === 'thinking') {
-                    startTyping();
-                } else {
-                    submitTyping();
-                }
+            const target = event.target as HTMLElement | null;
+            const isInteractiveTarget = target && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName);
+            if (isInteractiveTarget) return;
+
+            event.preventDefault();
+
+            if (mode === 'thinking') {
+                startTyping();
+            } else {
+                submitTyping();
             }
         };
 
@@ -372,11 +376,7 @@ export default function PostAssessment({
         responseRef.current = clamped;
     };
 
-    const handleTextareaKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            return;
-        }
-
+    const handleTextareaKeyDown = () => {
         setActiveQuestion((prev) => {
             if (prev.t3FirstKeypress !== null) return prev;
             return {
@@ -535,8 +535,8 @@ export default function PostAssessment({
                                 <p className="text-lg font-bold text-surface-900">{isThinking ? 'Thinking window' : 'Typing window'}</p>
                                 <p className="text-sm text-surface-600 mt-1">
                                     {isThinking
-                                        ? `Think for ${formatClock(thinkingRemainingMs)} more, then press Ctrl + Enter to start typing.`
-                                        : 'Type your answer and press Ctrl + Enter to submit.'}
+                                        ? `Think for ${formatClock(thinkingRemainingMs)} more, then press Space to start typing.`
+                                        : 'Type your answer. Press Space outside the text box to submit.'}
                                 </p>
 
                                 <div className="mt-3 h-1.5 bg-white/80 rounded-full overflow-hidden border border-surface-200">
@@ -601,7 +601,7 @@ export default function PostAssessment({
                             onClick={startTyping}
                             className="px-5 py-2.5 rounded-xl bg-surface-100 text-surface-700 font-semibold hover:bg-surface-200 transition-all cursor-pointer"
                         >
-                            Start typing (Ctrl + Enter)
+                            Start typing (Space)
                         </button>
                     ) : (
                         <button

@@ -85,6 +85,7 @@ export interface Participant {
 export type ExperimentPhase =
     | 'registration'
     | 'instructions'
+    | 'consent'
     | 'requesting-permissions'
     | 'pre-calibration'
     | 'reading'
@@ -104,6 +105,25 @@ export interface QuestionMetrics {
     firstKeypressLatencyMs: number | null;
     totalResponseTimeMs: number | null;
     totalQuestionTimeMs: number;
+}
+
+export interface ConsentRecord {
+    consentGiven: boolean;
+    consentedAt: number;
+    statementVersion: string;
+}
+
+export interface ReadingAdvanceMarker {
+    textId: string;
+    textTitle: string;
+    textIndex: number;
+    slideIndex: number;
+    totalSlides: number;
+    advancedBy: 'manual-spacebar-or-next' | 'auto-timeout';
+    markedAt: number;
+    elapsedMs: number;
+    minTimeMs: number;
+    maxTimeMs: number;
 }
 
 export interface SubjectiveResponse {
@@ -163,6 +183,8 @@ export interface ExperimentSessionDraft {
     currentTextIndex: number;
     currentSlideIndex: number;
     assessments: Record<string, TextAssessmentResult>;
+    consent?: ConsentRecord;
+    readingAdvanceMarkers?: ReadingAdvanceMarker[];
     activeAssessment?: AssessmentDraftState;
 }
 
@@ -188,6 +210,8 @@ export interface ExperimentSessionRecord {
     calibrationEnabled: boolean;
     totalTexts: number;
     assessments: Record<string, TextAssessmentResult>;
+    consent?: ConsentRecord;
+    readingAdvanceMarkers?: ReadingAdvanceMarker[];
 }
 
 export interface ProjectSettingsRecord {

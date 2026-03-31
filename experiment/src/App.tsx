@@ -3,6 +3,7 @@ import './index.css';
 import type {
   AssessmentDraftState,
   ExperimentConfig,
+  ConsentRecord,
   ExperimentPhase,
   ExperimentSessionDraft,
   ExperimentSessionRecord,
@@ -11,6 +12,7 @@ import type {
   Participant,
   PostAssessmentSettings,
   Question,
+  ReadingAdvanceMarker,
   SubjectiveQuestion,
   TextAssessmentResult,
 } from './types';
@@ -27,6 +29,7 @@ import {
 import { hasFirebaseConfig } from './services/firebase';
 import Registration from './components/Registration';
 import Instructions from './components/Instructions';
+import ConsentScreen from './components/ConsentScreen';
 import CalibrationScreen from './components/CalibrationScreen';
 import ReadingSlide from './components/ReadingSlide';
 import Completion from './components/Completion';
@@ -84,6 +87,8 @@ function App() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [assignedCondition, setAssignedCondition] = useState<GroupCondition>('group-1');
   const allAnswersRef = useRef<Record<string, TextAssessmentResult>>({});
+  const readingAdvanceMarkersRef = useRef<ReadingAdvanceMarker[]>([]);
+  const [consentRecord, setConsentRecord] = useState<ConsentRecord | null>(null);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
@@ -232,6 +237,8 @@ function App() {
     textIndex?: number;
     slideIndex?: number;
     answers?: Record<string, TextAssessmentResult>;
+    consent?: ConsentRecord | null;
+    readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
   }): ExperimentSessionDraft | null => {
     if (!participant || !config || !sessionId) return null;
@@ -262,9 +269,13 @@ function App() {
       currentTextIndex: params.textIndex ?? currentTextIndex,
       currentSlideIndex: params.slideIndex ?? currentSlideIndex,
       assessments: params.answers || allAnswersRef.current,
+      ...(params.consent || consentRecord ? { consent: params.consent || consentRecord || undefined } : {}),
+      ...(params.readingAdvanceMarkers || readingAdvanceMarkersRef.current.length
+        ? { readingAdvanceMarkers: params.readingAdvanceMarkers || readingAdvanceMarkersRef.current }
+        : {}),
       ...(params.assessmentDraft ? { activeAssessment: params.assessmentDraft } : {}),
     };
-  }, [assignedCondition, config, currentSlideIndex, currentTextIndex, hasPersistedSession, participant, phase, sessionId, sessionStartedAt]);
+  }, [assignedCondition, config, consentRecord, currentSlideIndex, currentTextIndex, hasPersistedSession, participant, phase, sessionId, sessionStartedAt]);
 
   const scheduleDraftRetry = useCallback(() => {
     if (draftRetryTimeoutRef.current !== null) return;
@@ -346,6 +357,8 @@ function App() {
     textIndex?: number;
     slideIndex?: number;
     answers?: Record<string, TextAssessmentResult>;
+    consent?: ConsentRecord | null;
+    readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
   } = {}) => {
     if (hasPersistedSession) return;
@@ -459,6 +472,10 @@ function App() {
         calibrationEnabled: config.calibrationSettings.enabled,
         totalTexts: config.texts.length,
         assessments: answersSnapshot,
+        ...(consentRecord ? { consent: consentRecord } : {}),
+        ...(readingAdvanceMarkersRef.current.length
+          ? { readingAdvanceMarkers: readingAdvanceMarkersRef.current }
+          : {}),
       };
 
       await saveExperimentSession(payload);
@@ -472,7 +489,7 @@ function App() {
       setSessionSyncStatus('error');
       setSessionSyncMessage(persistError instanceof Error ? persistError.message : 'Failed to save session to Firebase.');
     }
-  }, [assignedCondition, clearLocalDraftFallback, config, hasPersistedSession, participant, sessionId, sessionStartedAt]);
+  }, [assignedCondition, clearLocalDraftFallback, config, consentRecord, hasPersistedSession, participant, sessionId, sessionStartedAt]);
 
   // Get current text and variant
   const currentText = config?.texts[currentTextIndex];
@@ -569,6 +586,7 @@ function App() {
     if (
       phaseValue === 'registration'
       || phaseValue === 'instructions'
+      || phaseValue === 'consent'
       || phaseValue === 'requesting-permissions'
       || phaseValue === 'pre-calibration'
       || phaseValue === 'post-calibration'
@@ -594,9 +612,11 @@ function App() {
     setExitAfterPostCalibration(false);
     setPermissionStatus('idle');
     setPermissionError(null);
+    setConsentRecord(null);
     setSessionSyncStatus('idle');
     setSessionSyncMessage(null);
     allAnswersRef.current = {};
+    readingAdvanceMarkersRef.current = [];
     lastKnownDraftRef.current = null;
     pendingDraftRef.current = null;
     lastDraftHashRef.current = null;
@@ -610,8 +630,10 @@ function App() {
     setHasPersistedSession(false);
     setSessionSyncStatus('idle');
     setSessionSyncMessage(null);
+    setConsentRecord(null);
     setActiveAssessmentDraft(null);
     allAnswersRef.current = {};
+    readingAdvanceMarkersRef.current = [];
     setPhase('instructions');
     setResumeFromHistoryDraft(null);
     setExitAfterPostCalibration(false);
@@ -641,6 +663,8 @@ function App() {
     setCurrentTextIndex(resumedTextIndex);
     setCurrentSlideIndex(resumedSlideIndex);
     allAnswersRef.current = draft.assessments || {};
+    readingAdvanceMarkersRef.current = draft.readingAdvanceMarkers || [];
+    setConsentRecord(draft.consent || null);
     setActiveAssessmentDraft(draft.activeAssessment || null);
     setHasPersistedSession(false);
     setResumeFromHistoryDraft(draft);
@@ -676,12 +700,38 @@ function App() {
     setCurrentTextIndex(0);
     setCurrentSlideIndex(0);
     allAnswersRef.current = {};
+    readingAdvanceMarkersRef.current = [];
+    setConsentRecord(null);
     setParticipant(null);
     setResumeFromHistoryDraft(null);
     setExitAfterPostCalibration(false);
     setPhase('registration');
     navigate('/');
   }, [resolveCondition, navigate]);
+
+  const handleContinueToConsent = useCallback(() => {
+    setPhase('consent');
+    checkpointDraft({
+      force: true,
+      phaseValue: 'consent',
+      textIndex: currentTextIndex,
+      slideIndex: currentSlideIndex,
+      answers: allAnswersRef.current,
+      assessmentDraft: activeAssessmentDraft,
+    });
+  }, [activeAssessmentDraft, checkpointDraft, currentSlideIndex, currentTextIndex]);
+
+  const handleBackToInstructions = useCallback(() => {
+    setPhase('instructions');
+    checkpointDraft({
+      force: true,
+      phaseValue: 'instructions',
+      textIndex: currentTextIndex,
+      slideIndex: currentSlideIndex,
+      answers: allAnswersRef.current,
+      assessmentDraft: activeAssessmentDraft,
+    });
+  }, [activeAssessmentDraft, checkpointDraft, currentSlideIndex, currentTextIndex]);
 
   useEffect(() => {
     const recorder = recorderRef.current;
@@ -692,6 +742,13 @@ function App() {
 
   // After instructions → request permissions (if calibration enabled), otherwise go directly to reading
   const handleBeginExperiment = useCallback(() => {
+    const acceptedConsent: ConsentRecord = {
+      consentGiven: true,
+      consentedAt: Date.now(),
+      statementVersion: 'v1',
+    };
+
+    setConsentRecord(acceptedConsent);
     setExperimentStarted(true);
     if (!sessionStartedAt) {
       setSessionStartedAt(Date.now());
@@ -703,6 +760,7 @@ function App() {
       checkpointDraft({
         force: true,
         phaseValue: 'requesting-permissions',
+        consent: acceptedConsent,
       });
 
       recorderRef.current
@@ -740,6 +798,7 @@ function App() {
           textIndex: resumedTextIndex,
           slideIndex: resumedSlideIndex,
           answers: allAnswersRef.current,
+          consent: acceptedConsent,
           assessmentDraft: activeAssessmentDraft,
         });
         return;
@@ -754,6 +813,7 @@ function App() {
         phaseValue: 'reading',
         textIndex: 0,
         slideIndex: 0,
+        consent: acceptedConsent,
       });
     }
   }, [activeAssessmentDraft, checkpointDraft, config, deriveResumeTarget, normalizeResumePhase, participant, resumeFromHistoryDraft, sessionStartedAt]);
@@ -792,7 +852,10 @@ function App() {
     });
   }, [activeAssessmentDraft, checkpointDraft, deriveResumeTarget, normalizeResumePhase, resumeFromHistoryDraft]);
 
-  const handleNextSlide = useCallback(() => {
+  const handleNextSlide = useCallback((marker: ReadingAdvanceMarker) => {
+    const nextMarkers = [...readingAdvanceMarkersRef.current, marker];
+    readingAdvanceMarkersRef.current = nextMarkers;
+
     if (currentSlideIndex < currentSlides.length - 1) {
       const nextSlideIndex = currentSlideIndex + 1;
       setCurrentSlideIndex(nextSlideIndex);
@@ -801,6 +864,7 @@ function App() {
         phaseValue: 'reading',
         textIndex: currentTextIndex,
         slideIndex: nextSlideIndex,
+        readingAdvanceMarkers: nextMarkers,
       });
     } else {
       // Reading done for this text, move to assessment
@@ -810,6 +874,7 @@ function App() {
         phaseValue: 'assessment',
         textIndex: currentTextIndex,
         slideIndex: currentSlideIndex,
+        readingAdvanceMarkers: nextMarkers,
       });
     }
   }, [checkpointDraft, currentSlideIndex, currentSlides.length, currentTextIndex]);
@@ -1161,8 +1226,15 @@ function App() {
         {pathname === '/' && phase === 'instructions' && (
           <Instructions
             instructions={config.instructions}
-            onBegin={handleBeginExperiment}
+            onBegin={handleContinueToConsent}
             onBack={handleStartNewParticipant}
+          />
+        )}
+
+        {pathname === '/' && phase === 'consent' && (
+          <ConsentScreen
+            onBack={handleBackToInstructions}
+            onContinue={handleBeginExperiment}
           />
         )}
 
@@ -1233,6 +1305,7 @@ function App() {
         {pathname === '/' && phase === 'reading' && currentText && (
           <ReadingSlide
             key={`${currentTextIndex}-${currentSlideIndex}`}
+            textId={currentText.id}
             text={currentSlides[currentSlideIndex]}
             slideIndex={currentSlideIndex}
             totalSlides={currentSlides.length}
