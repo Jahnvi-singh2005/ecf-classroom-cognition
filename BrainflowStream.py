@@ -1,5 +1,8 @@
 # dependencies 
-# pip install mne mne-bids numpy pandas brainflow pyserial
+# pip install mne mne-bids numpy pandas brainflow pyserial pybv
+
+# --- install these on windows setup 
+# python -m pip install brainflow mne mne-bids pybv pyserial pandas
 
 from os import path
 from serial.tools import list_ports as lp
