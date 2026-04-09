@@ -35,6 +35,17 @@ const formatDuration = (ms: number | null): string => {
 
 export default function SessionDetails({ session, onBack }: SessionDetailsProps) {
     const textIds = useMemo(() => Object.keys(session.assessments || {}), [session.assessments]);
+    const participantPrimaryLabel = session.participant.subjectId || session.participant.name || 'Unknown participant';
+    const participantMeta = [
+        session.participant.sex,
+        session.participant.yearOfStudy ? `Year ${session.participant.yearOfStudy}` : '',
+        session.participant.disciplineOfStudy,
+    ].filter(Boolean);
+    const legacyParticipantMeta = [
+        session.participant.email,
+        Number.isFinite(session.participant.age) ? `Age ${session.participant.age}` : '',
+    ].filter(Boolean);
+    const participantMetaLine = (participantMeta.length > 0 ? participantMeta : legacyParticipantMeta);
 
     return (
         <div className="flex flex-col h-full min-h-0 bg-white rounded-2xl w-full">
@@ -52,13 +63,19 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                 </button>
                 <div>
                     <h2 className="text-2xl font-bold text-surface-900 leading-tight">
-                        {session.participant.name}
+                        {participantPrimaryLabel}
                     </h2>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm text-surface-600 font-medium">
-                        <span>{session.participant.email || 'No email provided'}</span>
-                        <span className="text-surface-300">&bull;</span>
-                        <span>Age: {session.participant.age}</span>
-                        <span className="text-surface-300">&bull;</span>
+                        {participantMetaLine.length > 0 ? (
+                            participantMetaLine.map((item, index) => (
+                                <div key={`${item}-${index}`} className="inline-flex items-center gap-2">
+                                    {index > 0 && <span className="text-surface-300">&bull;</span>}
+                                    <span>{item}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <span>No participant metadata</span>
+                        )}
                         <span className="capitalize font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-lg border border-primary-100">
                             Group: {session.assignedCondition}
                         </span>
@@ -73,7 +90,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
                         <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Session ID</span>
-                        <span className="mt-1.5 text-sm font-semibold text-surface-800 break-words">{session.sessionId}</span>
+                        <span className="mt-1.5 text-sm font-semibold text-surface-800 wrap-break-word">{session.sessionId}</span>
                     </div>
                     <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col">
                         <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Timing</span>
@@ -90,6 +107,20 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                 : 'Consent record unavailable (older session or consent not captured).'}
                         </div>
                     </div>
+
+                    {session.learnerSelfReport && (
+                        <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 flex flex-col sm:col-span-2">
+                            <span className="text-xs uppercase text-surface-500 font-bold tracking-wider">Learner Self Report</span>
+                            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-surface-700">
+                                <span className="bg-white border border-surface-200 rounded-md px-2 py-1">General learning inclination: {session.learnerSelfReport.generalLearningInclination} / 7</span>
+                                <span className="bg-white border border-surface-200 rounded-md px-2 py-1">Out-of-domain inclination: {session.learnerSelfReport.outOfDomainLearningInclination} / 7</span>
+                                <span className="bg-white border border-surface-200 rounded-md px-2 py-1">In-domain inclination: {session.learnerSelfReport.inDomainLearningInclination} / 7</span>
+                            </div>
+                            <div className="mt-3 rounded-lg border border-surface-200 bg-white p-3 text-sm text-surface-800">
+                                {session.learnerSelfReport.academicIntelligenceReflection}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {textIds.length === 0 && (
@@ -108,7 +139,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
 
                     return (
                         <div key={textId} className="bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                            <div className="bg-gradient-to-r from-surface-50 to-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-200">
+                            <div className="bg-linear-to-r from-surface-50 to-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-200">
                                 <h3 className="font-bold text-surface-800 text-lg flex items-center gap-2">
                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-xs">{index + 1}</span>
                                     {textData.textTitle}
@@ -133,7 +164,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                                         <p className="text-sm font-bold text-surface-800 leading-snug pt-0.5">{resp.prompt}</p>
                                                     </div>
                                                     <div className="pl-7 space-y-3.5">
-                                                        <div className="bg-white border border-surface-200/80 rounded-lg p-4 text-sm text-surface-700 leading-relaxed shadow-sm min-h-[3rem]">
+                                                        <div className="bg-white border border-surface-200/80 rounded-lg p-4 text-sm text-surface-700 leading-relaxed shadow-sm min-h-12">
                                                             {resp.response ? resp.response : <span className="italic text-surface-400">No response provided</span>}
                                                         </div>
 
@@ -215,7 +246,7 @@ export default function SessionDetails({ session, onBack }: SessionDetailsProps)
                                         <h4 className="text-sm font-bold uppercase tracking-wider text-surface-400 mb-3 ml-1">Self-Reported Feedback</h4>
                                         <div className="flex flex-wrap gap-3">
                                             {Object.entries(textData.feedbackRatings).map(([key, value]) => (
-                                                <div key={key} className="flex flex-col gap-1.5 bg-indigo-50/50 border border-indigo-100/80 rounded-xl p-3 min-w-[120px]">
+                                                <div key={key} className="flex flex-col gap-1.5 bg-indigo-50/50 border border-indigo-100/80 rounded-xl p-3 min-w-30">
                                                     <span className="text-[11px] text-indigo-900/60 font-black uppercase tracking-widest">{key}</span>
                                                     <div className="flex items-end gap-2">
                                                         <span className="text-2xl font-black text-indigo-600 leading-none">{value}</span>

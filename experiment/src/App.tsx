@@ -9,6 +9,7 @@ import type {
   ExperimentSessionRecord,
   FeedbackQuestion,
   GroupCondition,
+  LearnerSelfReport as LearnerSelfReportData,
   Participant,
   PostAssessmentSettings,
   Question,
@@ -28,6 +29,7 @@ import {
 } from './services/ExperimentDataService';
 import { hasFirebaseConfig } from './services/firebase';
 import Registration from './components/Registration';
+import LearnerSelfReport from './components/LearnerSelfReport';
 import Instructions from './components/Instructions';
 import ConsentScreen from './components/ConsentScreen';
 import CalibrationScreen from './components/CalibrationScreen';
@@ -63,6 +65,52 @@ const DEFAULT_FEEDBACK_QUESTIONS: FeedbackQuestion[] = [
   { id: 'effort', prompt: 'Perceived effort' },
 ];
 
+const ADDITIONAL_FEEDBACK_QUESTIONS: FeedbackQuestion[] = [
+  {
+    id: 'confidence',
+    prompt: 'How confident are you in your answers? (1 - not confident at all; 7 - completely confident)',
+  },
+  {
+    id: 'understanding-after-task',
+    prompt: 'Do you feel that you understand the topic better after this task? (1 - strongly disagree; 7 - strongly agree)',
+  },
+  {
+    id: 'prior-familiarity',
+    prompt: 'How familiar were you with the contents of this topic before this task? (1 - not familiar at all; 7 - well aware of the topic)',
+  },
+  {
+    id: 'difficulty-meaningfulness',
+    prompt: 'Did the difficulty feel meaningful or unnecessarily confusing? (1 - completely confusing; 7 - completely meaningful)',
+  },
+  {
+    id: 'beyond-explicit',
+    prompt: 'Did this task require you to figure things out beyond what was explicitly stated? (1 - strongly disagree; 7 - strongly agree)',
+  },
+  {
+    id: 'attention-fluctuation',
+    prompt: 'How much did your attention fluctuate during the task? (1 - not at all; 7 - did not pay attention at all)',
+  },
+];
+
+const REQUIRED_FEEDBACK_QUESTIONS: FeedbackQuestion[] = [
+  ...DEFAULT_FEEDBACK_QUESTIONS,
+  ...ADDITIONAL_FEEDBACK_QUESTIONS,
+];
+
+const mergeFeedbackQuestions = (fromConfig?: FeedbackQuestion[]): FeedbackQuestion[] => {
+  const merged = new Map<string, FeedbackQuestion>();
+  const base = fromConfig?.length ? fromConfig : DEFAULT_FEEDBACK_QUESTIONS;
+
+  base.forEach((item) => merged.set(item.id, item));
+  REQUIRED_FEEDBACK_QUESTIONS.forEach((item) => {
+    if (!merged.has(item.id)) {
+      merged.set(item.id, item);
+    }
+  });
+
+  return Array.from(merged.values());
+};
+
 const DRAFT_WRITE_MIN_INTERVAL_MS = 10000;
 const DRAFT_LOCAL_KEY_PREFIX = 'exp-draft-unsynced';
 const DRAFT_RETRY_BASE_MS = 1500;
@@ -88,6 +136,7 @@ function App() {
   const [assignedCondition, setAssignedCondition] = useState<GroupCondition>('group-1');
   const allAnswersRef = useRef<Record<string, TextAssessmentResult>>({});
   const readingAdvanceMarkersRef = useRef<ReadingAdvanceMarker[]>([]);
+  const [learnerSelfReport, setLearnerSelfReport] = useState<LearnerSelfReportData | null>(null);
   const [consentRecord, setConsentRecord] = useState<ConsentRecord | null>(null);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -237,6 +286,7 @@ function App() {
     textIndex?: number;
     slideIndex?: number;
     answers?: Record<string, TextAssessmentResult>;
+    selfReport?: LearnerSelfReportData | null;
     consent?: ConsentRecord | null;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
@@ -244,8 +294,10 @@ function App() {
     if (!participant || !config || !sessionId) return null;
 
     const participantPayload: Participant = {
-      name: participant.name,
-      age: participant.age,
+      subjectId: participant.subjectId,
+      sex: participant.sex,
+      yearOfStudy: participant.yearOfStudy,
+      disciplineOfStudy: participant.disciplineOfStudy,
       ...(participant.email ? { email: participant.email } : {}),
       ...(participant.notes ? { notes: participant.notes } : {}),
     };
@@ -269,13 +321,16 @@ function App() {
       currentTextIndex: params.textIndex ?? currentTextIndex,
       currentSlideIndex: params.slideIndex ?? currentSlideIndex,
       assessments: params.answers || allAnswersRef.current,
+      ...(params.selfReport || learnerSelfReport
+        ? { learnerSelfReport: params.selfReport || learnerSelfReport || undefined }
+        : {}),
       ...(params.consent || consentRecord ? { consent: params.consent || consentRecord || undefined } : {}),
       ...(params.readingAdvanceMarkers || readingAdvanceMarkersRef.current.length
         ? { readingAdvanceMarkers: params.readingAdvanceMarkers || readingAdvanceMarkersRef.current }
         : {}),
       ...(params.assessmentDraft ? { activeAssessment: params.assessmentDraft } : {}),
     };
-  }, [assignedCondition, config, consentRecord, currentSlideIndex, currentTextIndex, hasPersistedSession, participant, phase, sessionId, sessionStartedAt]);
+  }, [assignedCondition, config, consentRecord, currentSlideIndex, currentTextIndex, hasPersistedSession, learnerSelfReport, participant, phase, sessionId, sessionStartedAt]);
 
   const scheduleDraftRetry = useCallback(() => {
     if (draftRetryTimeoutRef.current !== null) return;
@@ -357,6 +412,7 @@ function App() {
     textIndex?: number;
     slideIndex?: number;
     answers?: Record<string, TextAssessmentResult>;
+    selfReport?: LearnerSelfReportData | null;
     consent?: ConsentRecord | null;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
@@ -454,8 +510,10 @@ function App() {
       setSessionSyncMessage(null);
 
       const participantPayload: Participant = {
-        name: participant.name,
-        age: participant.age,
+        subjectId: participant.subjectId,
+        sex: participant.sex,
+        yearOfStudy: participant.yearOfStudy,
+        disciplineOfStudy: participant.disciplineOfStudy,
         ...(participant.email ? { email: participant.email } : {}),
         ...(participant.notes ? { notes: participant.notes } : {}),
       };
@@ -472,6 +530,7 @@ function App() {
         calibrationEnabled: config.calibrationSettings.enabled,
         totalTexts: config.texts.length,
         assessments: answersSnapshot,
+        ...(learnerSelfReport ? { learnerSelfReport } : {}),
         ...(consentRecord ? { consent: consentRecord } : {}),
         ...(readingAdvanceMarkersRef.current.length
           ? { readingAdvanceMarkers: readingAdvanceMarkersRef.current }
@@ -489,7 +548,7 @@ function App() {
       setSessionSyncStatus('error');
       setSessionSyncMessage(persistError instanceof Error ? persistError.message : 'Failed to save session to Firebase.');
     }
-  }, [assignedCondition, clearLocalDraftFallback, config, consentRecord, hasPersistedSession, participant, sessionId, sessionStartedAt]);
+  }, [assignedCondition, clearLocalDraftFallback, config, consentRecord, hasPersistedSession, learnerSelfReport, participant, sessionId, sessionStartedAt]);
 
   // Get current text and variant
   const currentText = config?.texts[currentTextIndex];
@@ -514,9 +573,7 @@ function App() {
       question: item.prompt,
       type: 'short-answer',
     }));
-  const currentFeedbackQuestions = config?.feedbackQuestions?.length
-    ? config.feedbackQuestions
-    : DEFAULT_FEEDBACK_QUESTIONS;
+  const currentFeedbackQuestions = mergeFeedbackQuestions(config?.feedbackQuestions);
   const postAssessmentSettings = config?.postAssessmentSettings || DEFAULT_POST_ASSESSMENT_SETTINGS;
   const syncIndicatorMessage = (() => {
     switch (sessionSyncStatus) {
@@ -585,6 +642,7 @@ function App() {
   const normalizeResumePhase = useCallback((phaseValue: ExperimentPhase): ExperimentPhase => {
     if (
       phaseValue === 'registration'
+      || phaseValue === 'learner-self-report'
       || phaseValue === 'instructions'
       || phaseValue === 'consent'
       || phaseValue === 'requesting-permissions'
@@ -601,6 +659,7 @@ function App() {
   const resetToRegistrationState = useCallback(() => {
     setExperimentStarted(false);
     setParticipant(null);
+    setLearnerSelfReport(null);
     setPhase('registration');
     setCurrentTextIndex(0);
     setCurrentSlideIndex(0);
@@ -625,6 +684,7 @@ function App() {
 
   const startFreshSession = useCallback((participantPayload: Participant) => {
     setParticipant(participantPayload);
+    setLearnerSelfReport(null);
     setSessionId(makeSessionId());
     setSessionStartedAt(null);
     setHasPersistedSession(false);
@@ -634,22 +694,45 @@ function App() {
     setActiveAssessmentDraft(null);
     allAnswersRef.current = {};
     readingAdvanceMarkersRef.current = [];
-    setPhase('instructions');
+    setPhase('learner-self-report');
     setResumeFromHistoryDraft(null);
     setExitAfterPostCalibration(false);
     checkpointDraft({
       force: true,
-      phaseValue: 'instructions',
+      phaseValue: 'learner-self-report',
       textIndex: 0,
       slideIndex: 0,
       answers: {},
     });
   }, [checkpointDraft, makeSessionId]);
 
-  const handleRegistration = useCallback(async (data: { name: string; age: number; email?: string; notes?: string }) => {
+  const handleRegistration = useCallback(async (data: {
+    subjectId: string;
+    sex: string;
+    yearOfStudy: string;
+    disciplineOfStudy: string;
+  }) => {
     const participantPayload = data as Participant;
     startFreshSession(participantPayload);
   }, [startFreshSession]);
+
+  const handleLearnerSelfReportSubmit = useCallback((report: Omit<LearnerSelfReportData, 'submittedAt'>) => {
+    const reportPayload: LearnerSelfReportData = {
+      ...report,
+      submittedAt: Date.now(),
+    };
+
+    setLearnerSelfReport(reportPayload);
+    setPhase('instructions');
+    checkpointDraft({
+      force: true,
+      phaseValue: 'instructions',
+      textIndex: currentTextIndex,
+      slideIndex: currentSlideIndex,
+      answers: allAnswersRef.current,
+      selfReport: reportPayload,
+    });
+  }, [checkpointDraft, currentSlideIndex, currentTextIndex]);
 
   const handleResumeDraftFromHistory = useCallback((draft: ExperimentSessionDraft) => {
     const maxTextIndex = Math.max((config?.texts.length || 1) - 1, 0);
@@ -664,13 +747,14 @@ function App() {
     setCurrentSlideIndex(resumedSlideIndex);
     allAnswersRef.current = draft.assessments || {};
     readingAdvanceMarkersRef.current = draft.readingAdvanceMarkers || [];
+    setLearnerSelfReport(draft.learnerSelfReport || null);
     setConsentRecord(draft.consent || null);
     setActiveAssessmentDraft(draft.activeAssessment || null);
     setHasPersistedSession(false);
     setResumeFromHistoryDraft(draft);
     setExitAfterPostCalibration(false);
     setExperimentStarted(false);
-    setPhase('instructions');
+    setPhase(draft.learnerSelfReport ? 'instructions' : 'learner-self-report');
     setSessionSyncStatus('saved');
     setSessionSyncMessage('Resuming session. Complete entry steps to continue.');
     lastKnownDraftRef.current = draft;
@@ -703,6 +787,7 @@ function App() {
     readingAdvanceMarkersRef.current = [];
     setConsentRecord(null);
     setParticipant(null);
+    setLearnerSelfReport(null);
     setResumeFromHistoryDraft(null);
     setExitAfterPostCalibration(false);
     setPhase('registration');
@@ -769,7 +854,7 @@ function App() {
           try {
             setPermissionStatus('granted');
             // Start recordings
-            recorderRef.current.startAll(participant?.name || 'unknown');
+            recorderRef.current.startAll(participant?.subjectId || participant?.name || 'unknown');
             // Proceed to pre-calibration
             setPhase('pre-calibration');
           } catch (err) {
@@ -1020,7 +1105,7 @@ function App() {
       .then(() => {
         try {
           setPermissionStatus('granted');
-          recorderRef.current.startAll(participant?.name || 'unknown');
+          recorderRef.current.startAll(participant?.subjectId || participant?.name || 'unknown');
           setPhase('pre-calibration');
         } catch (err) {
           setPermissionStatus('error');
@@ -1223,6 +1308,14 @@ function App() {
           />
         )}
 
+        {pathname === '/' && phase === 'learner-self-report' && (
+          <LearnerSelfReport
+            initialValue={learnerSelfReport}
+            onSubmit={handleLearnerSelfReportSubmit}
+            onBack={resetToRegistrationState}
+          />
+        )}
+
         {pathname === '/' && phase === 'instructions' && (
           <Instructions
             instructions={config.instructions}
@@ -1350,7 +1443,7 @@ function App() {
 
         {pathname === '/' && phase === 'completed' && participant && (
           <Completion
-            participantName={participant.name}
+            participantName={participant.subjectId || participant.name || 'Participant'}
             syncStatus={completionSyncStatus}
             syncMessage={sessionSyncMessage}
             onStartNew={handleStartNewParticipant}

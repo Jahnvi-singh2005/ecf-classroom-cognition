@@ -23,6 +23,42 @@ const formatDateTime = (timestamp: number): string => {
     }
 };
 
+const participantPrimaryLabel = (participant: ExperimentSessionRecord['participant']): string => (
+    participant.subjectId || participant.name || 'Unknown participant'
+);
+
+const participantSecondaryLabel = (participant: ExperimentSessionRecord['participant']): string => {
+    const modernParts = [
+        participant.sex,
+        participant.yearOfStudy ? `Year ${participant.yearOfStudy}` : '',
+        participant.disciplineOfStudy,
+    ].filter(Boolean);
+
+    if (modernParts.length > 0) {
+        return modernParts.join(' · ');
+    }
+
+    const legacyParts = [
+        participant.email,
+        Number.isFinite(participant.age) ? `Age ${participant.age}` : '',
+    ].filter(Boolean);
+
+    return legacyParts.length > 0 ? legacyParts.join(' · ') : 'No participant metadata';
+};
+
+const participantSearchText = (participant: ExperimentSessionRecord['participant']): string => [
+    participant.subjectId,
+    participant.sex,
+    participant.yearOfStudy,
+    participant.disciplineOfStudy,
+    participant.name,
+    participant.email,
+    Number.isFinite(participant.age) ? String(participant.age) : '',
+]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
 export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps) {
     const [sessions, setSessions] = useState<ExperimentSessionRecord[]>([]);
     const [resumableDrafts, setResumableDrafts] = useState<ExperimentSessionDraft[]>([]);
@@ -73,10 +109,9 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
         if (!normalized) return sessions;
 
         return sessions.filter((item) => {
-            const email = item.participant.email?.toLowerCase() || '';
+            const participantText = participantSearchText(item.participant);
             return (
-                item.participant.name.toLowerCase().includes(normalized)
-                || email.includes(normalized)
+                participantText.includes(normalized)
                 || item.sessionId.toLowerCase().includes(normalized)
                 || item.participantKey.toLowerCase().includes(normalized)
             );
@@ -88,10 +123,9 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
         if (!normalized) return resumableDrafts;
 
         return resumableDrafts.filter((item) => {
-            const email = item.participant.email?.toLowerCase() || '';
+            const participantText = participantSearchText(item.participant);
             return (
-                item.participant.name.toLowerCase().includes(normalized)
-                || email.includes(normalized)
+                participantText.includes(normalized)
                 || item.sessionId.toLowerCase().includes(normalized)
                 || item.participantKey.toLowerCase().includes(normalized)
             );
@@ -238,7 +272,7 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
                             <input
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
-                                placeholder="Search by participant, email, key, or session id"
+                                placeholder="Search by subject ID, participant details, key, or session id"
                                 className="w-full md:max-w-lg rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-700 outline-none focus:ring-3 focus:ring-primary-100 focus:border-primary-400"
                             />
                         </div>
@@ -317,8 +351,8 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
                                                     >
                                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                                             <div>
-                                                                <p className="text-sm font-semibold text-surface-900">{draft.participant.name}</p>
-                                                                <p className="text-xs text-surface-500 mt-1">{draft.participant.email || 'No email'} · Age {draft.participant.age}</p>
+                                                                <p className="text-sm font-semibold text-surface-900">{participantPrimaryLabel(draft.participant)}</p>
+                                                                <p className="text-xs text-surface-500 mt-1">{participantSecondaryLabel(draft.participant)}</p>
                                                                 <p className="text-xs text-surface-500 mt-1">Session: {draft.sessionId}</p>
                                                             </div>
 
@@ -362,12 +396,12 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
                                                     key={session.sessionId}
                                                     onClick={() => setSelectedSession(session)}
                                                     className="w-full text-left rounded-xl border border-surface-200 bg-white p-4 cursor-pointer hover:border-primary-400 hover:shadow-md transition-all group focus:outline-none focus:ring-3 focus:ring-primary-100"
-                                                    aria-label={`Open session ${session.sessionId} for ${session.participant.name}`}
+                                                    aria-label={`Open session ${session.sessionId} for ${participantPrimaryLabel(session.participant)}`}
                                                 >
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
-                                                            <p className="text-sm font-semibold text-surface-900">{session.participant.name}</p>
-                                                            <p className="text-xs text-surface-500 mt-1">{session.participant.email || 'No email'} · Age {session.participant.age}</p>
+                                                            <p className="text-sm font-semibold text-surface-900">{participantPrimaryLabel(session.participant)}</p>
+                                                            <p className="text-xs text-surface-500 mt-1">{participantSecondaryLabel(session.participant)}</p>
                                                             <p className="text-xs text-surface-500 mt-1">Session: {session.sessionId}</p>
                                                         </div>
 
@@ -402,8 +436,8 @@ export default function HistoryPage({ onBack, onResumeDraft }: HistoryPageProps)
                                                     </label>
 
                                                     <div>
-                                                        <p className="text-sm font-semibold text-surface-900">{session.participant.name}</p>
-                                                        <p className="text-xs text-surface-500 mt-1">{session.participant.email || 'No email'} · Age {session.participant.age}</p>
+                                                        <p className="text-sm font-semibold text-surface-900">{participantPrimaryLabel(session.participant)}</p>
+                                                        <p className="text-xs text-surface-500 mt-1">{participantSecondaryLabel(session.participant)}</p>
                                                         <p className="text-xs text-surface-500 mt-1">Session: {session.sessionId}</p>
                                                     </div>
 

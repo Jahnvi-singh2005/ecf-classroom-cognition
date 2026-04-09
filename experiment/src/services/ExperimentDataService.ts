@@ -42,11 +42,15 @@ const stripUndefined = <T,>(value: T): T => {
 };
 
 export const buildParticipantKey = (participant: Participant): string => {
+    if (participant.subjectId?.trim()) {
+        return `subject-${normalizeForKey(participant.subjectId)}`;
+    }
+
     if (participant.email?.trim()) {
         return `email-${normalizeForKey(participant.email)}`;
     }
 
-    const namePart = normalizeForKey(participant.name || 'unknown');
+    const namePart = normalizeForKey(participant.name || participant.subjectId || 'unknown');
     const agePart = Number.isFinite(participant.age) ? String(participant.age) : 'na';
     return `participant-${namePart}-${agePart}`;
 };

@@ -426,8 +426,8 @@ export default function PostAssessment({
             <div className="h-full min-h-0 flex items-center justify-center p-3 md:p-4 overflow-hidden">
                 <div className="w-full max-w-4xl h-full max-h-full panel p-5 md:p-6 flex flex-col overflow-y-auto md:overflow-hidden">
                     <div className="mb-4 shrink-0">
-                        <span className="chip">Post-assessment feedback</span>
-                        <h2 className="text-xl md:text-2xl font-semibold text-surface-900 mt-2">How did this text feel?</h2>
+                        <span className="chip">Feedback</span>
+                        <h2 className="text-xl md:text-2xl font-semibold text-surface-900 mt-2">Feedback</h2>
                         <p className="text-surface-500 text-sm mt-1">Rate each item from {settings.feedbackScaleMin} (low) to {settings.feedbackScaleMax} (high).</p>
                     </div>
 

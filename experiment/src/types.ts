@@ -76,14 +76,28 @@ export interface ExperimentConfig {
 }
 
 export interface Participant {
-    name: string;
-    age: number;
+    subjectId: string;
+    sex: string;
+    yearOfStudy: string;
+    disciplineOfStudy: string;
+    // Legacy fields retained for backward compatibility with older saved sessions.
+    name?: string;
+    age?: number;
     email?: string;
     notes?: string;
 }
 
+export interface LearnerSelfReport {
+    generalLearningInclination: number;
+    outOfDomainLearningInclination: number;
+    inDomainLearningInclination: number;
+    academicIntelligenceReflection: string;
+    submittedAt: number;
+}
+
 export type ExperimentPhase =
     | 'registration'
+    | 'learner-self-report'
     | 'instructions'
     | 'consent'
     | 'requesting-permissions'
@@ -183,6 +197,7 @@ export interface ExperimentSessionDraft {
     currentTextIndex: number;
     currentSlideIndex: number;
     assessments: Record<string, TextAssessmentResult>;
+    learnerSelfReport?: LearnerSelfReport;
     consent?: ConsentRecord;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
     activeAssessment?: AssessmentDraftState;
@@ -210,6 +225,7 @@ export interface ExperimentSessionRecord {
     calibrationEnabled: boolean;
     totalTexts: number;
     assessments: Record<string, TextAssessmentResult>;
+    learnerSelfReport?: LearnerSelfReport;
     consent?: ConsentRecord;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
 }

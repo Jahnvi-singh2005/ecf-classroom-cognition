@@ -22,7 +22,13 @@
     { "id": "difficulty", "prompt": "Perceived difficulty" },
     { "id": "engagement", "prompt": "Perceived engagement" },
     { "id": "confusion", "prompt": "Perceived confusion" },
-    { "id": "effort", "prompt": "Perceived effort" }
+    { "id": "effort", "prompt": "Perceived effort" },
+    { "id": "confidence", "prompt": "How confident are you in your answers? (1 - not confident at all; 7 - completely confident)" },
+    { "id": "understanding-after-task", "prompt": "Do you feel that you understand the topic better after this task? (1 - strongly disagree; 7 - strongly agree)" },
+    { "id": "prior-familiarity", "prompt": "How familiar were you with the contents of this topic before this task? (1 - not familiar at all; 7 - well aware of the topic)" },
+    { "id": "difficulty-meaningfulness", "prompt": "Did the difficulty feel meaningful or unnecessarily confusing? (1 - completely confusing; 7 - completely meaningful)" },
+    { "id": "beyond-explicit", "prompt": "Did this task require you to figure things out beyond what was explicitly stated? (1 - strongly disagree; 7 - strongly agree)" },
+    { "id": "attention-fluctuation", "prompt": "How much did your attention fluctuate during the task? (1 - not at all; 7 - did not pay attention at all)" }
   ],
   "condition": "group-1",
   "texts": [

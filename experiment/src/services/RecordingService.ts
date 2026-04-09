@@ -5,12 +5,15 @@
  * Flow:
  *   1. requestPermissions() — prompts user for screen + camera access
  *   2. startAll()           — begins recording both streams
- *   3. stopAll()            — stops both, triggers .webm downloads
+ *   3. stopAll()            — stops both, downloads one .zip archive containing both recordings
  */
+
+import JSZip from 'jszip';
 
 export interface RecordingFiles {
     screen: Blob | null;
     camera: Blob | null;
+    archive: Blob | null;
 }
 
 export class RecordingService {
@@ -22,6 +25,7 @@ export class RecordingService {
     private cameraChunks: Blob[] = [];
     private participantName = '';
     private isRecording = false;
+    private recordingMimeType = 'video/webm';
 
     /**
      * Request both screen-share and camera permissions.
@@ -58,10 +62,11 @@ export class RecordingService {
         this.participantName = participantName;
         this.screenChunks = [];
         this.cameraChunks = [];
+        this.recordingMimeType = this.getSupportedMimeType();
 
         if (this.screenStream) {
             this.screenRecorder = new MediaRecorder(this.screenStream, {
-                mimeType: this.getSupportedMimeType(),
+                mimeType: this.recordingMimeType,
             });
             this.screenRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) this.screenChunks.push(e.data);
@@ -71,7 +76,7 @@ export class RecordingService {
 
         if (this.cameraStream) {
             this.cameraRecorder = new MediaRecorder(this.cameraStream, {
-                mimeType: this.getSupportedMimeType(),
+                mimeType: this.recordingMimeType,
             });
             this.cameraRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) this.cameraChunks.push(e.data);
@@ -87,7 +92,7 @@ export class RecordingService {
      */
     async stopAll(): Promise<RecordingFiles> {
         if (!this.isRecording && !this.screenStream && !this.cameraStream) {
-            return { screen: null, camera: null };
+            return { screen: null, camera: null, archive: null };
         }
 
         const [screenBlob, cameraBlob] = await Promise.all([
@@ -100,12 +105,26 @@ export class RecordingService {
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const safeName = this.participantName.replace(/[^a-zA-Z0-9]/g, '_');
+        const extension = this.recordingMimeType.includes('mp4') ? 'mp4' : 'webm';
 
+        const filesToZip: Array<{ filename: string; blob: Blob }> = [];
         if (screenBlob) {
-            this.downloadBlob(screenBlob, `screen_recording_${safeName}_${timestamp}.webm`);
+            filesToZip.push({
+                filename: `screen_recording_${safeName}_${timestamp}.${extension}`,
+                blob: screenBlob,
+            });
         }
         if (cameraBlob) {
-            this.downloadBlob(cameraBlob, `camera_recording_${safeName}_${timestamp}.webm`);
+            filesToZip.push({
+                filename: `camera_recording_${safeName}_${timestamp}.${extension}`,
+                blob: cameraBlob,
+            });
+        }
+
+        let archiveBlob: Blob | null = null;
+        if (filesToZip.length > 0) {
+            archiveBlob = await this.createZipArchive(filesToZip);
+            this.downloadBlob(archiveBlob, `recordings_${safeName}_${timestamp}.zip`);
         }
 
         // Cleanup
@@ -113,7 +132,7 @@ export class RecordingService {
         this.cameraRecorder = null;
         this.isRecording = false;
 
-        return { screen: screenBlob, camera: cameraBlob };
+        return { screen: screenBlob, camera: cameraBlob, archive: archiveBlob };
     }
 
     // ─── Private Helpers ────────────────────────────────────────
@@ -143,12 +162,25 @@ export class RecordingService {
         URL.revokeObjectURL(url);
     }
 
+    private createZipArchive(files: Array<{ filename: string; blob: Blob }>): Promise<Blob> {
+        const zip = new JSZip();
+        files.forEach((file) => {
+            zip.file(file.filename, file.blob);
+        });
+
+        return zip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE',
+            compressionOptions: { level: 6 },
+        });
+    }
+
     private getSupportedMimeType(): string {
         const types = [
+            'video/mp4',
             'video/webm;codecs=vp9',
             'video/webm;codecs=vp8',
             'video/webm',
-            'video/mp4',
         ];
         for (const type of types) {
             if (MediaRecorder.isTypeSupported(type)) return type;
