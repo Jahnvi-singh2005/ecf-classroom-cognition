@@ -294,10 +294,12 @@ function App() {
     if (!participant || !config || !sessionId) return null;
 
     const participantPayload: Participant = {
-      subjectId: participant.subjectId,
-      sex: participant.sex,
-      yearOfStudy: participant.yearOfStudy,
-      disciplineOfStudy: participant.disciplineOfStudy,
+      ...(participant.name ? { name: participant.name } : {}),
+      ...(Number.isFinite(participant.age) ? { age: participant.age } : {}),
+      ...(participant.subjectId ? { subjectId: participant.subjectId } : {}),
+      ...(participant.sex ? { sex: participant.sex } : {}),
+      ...(participant.yearOfStudy ? { yearOfStudy: participant.yearOfStudy } : {}),
+      ...(participant.disciplineOfStudy ? { disciplineOfStudy: participant.disciplineOfStudy } : {}),
       ...(participant.email ? { email: participant.email } : {}),
       ...(participant.notes ? { notes: participant.notes } : {}),
     };
@@ -510,10 +512,12 @@ function App() {
       setSessionSyncMessage(null);
 
       const participantPayload: Participant = {
-        subjectId: participant.subjectId,
-        sex: participant.sex,
-        yearOfStudy: participant.yearOfStudy,
-        disciplineOfStudy: participant.disciplineOfStudy,
+        ...(participant.name ? { name: participant.name } : {}),
+        ...(Number.isFinite(participant.age) ? { age: participant.age } : {}),
+        ...(participant.subjectId ? { subjectId: participant.subjectId } : {}),
+        ...(participant.sex ? { sex: participant.sex } : {}),
+        ...(participant.yearOfStudy ? { yearOfStudy: participant.yearOfStudy } : {}),
+        ...(participant.disciplineOfStudy ? { disciplineOfStudy: participant.disciplineOfStudy } : {}),
         ...(participant.email ? { email: participant.email } : {}),
         ...(participant.notes ? { notes: participant.notes } : {}),
       };
@@ -707,6 +711,10 @@ function App() {
   }, [checkpointDraft, makeSessionId]);
 
   const handleRegistration = useCallback(async (data: {
+    name: string;
+    age: number;
+    email?: string;
+    notes?: string;
     subjectId: string;
     sex: string;
     yearOfStudy: string;
@@ -1443,7 +1451,7 @@ function App() {
 
         {pathname === '/' && phase === 'completed' && participant && (
           <Completion
-            participantName={participant.subjectId || participant.name || 'Participant'}
+            participantName={participant.name || participant.subjectId || 'Participant'}
             syncStatus={completionSyncStatus}
             syncMessage={sessionSyncMessage}
             onStartNew={handleStartNewParticipant}

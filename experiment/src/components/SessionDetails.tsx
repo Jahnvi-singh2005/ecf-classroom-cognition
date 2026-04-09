@@ -36,16 +36,14 @@ const formatDuration = (ms: number | null): string => {
 export default function SessionDetails({ session, onBack }: SessionDetailsProps) {
     const textIds = useMemo(() => Object.keys(session.assessments || {}), [session.assessments]);
     const participantPrimaryLabel = session.participant.subjectId || session.participant.name || 'Unknown participant';
-    const participantMeta = [
+    const participantMetaLine = [
+        session.participant.name && session.participant.subjectId ? `Name: ${session.participant.name}` : '',
+        Number.isFinite(session.participant.age) ? `Age ${session.participant.age}` : '',
         session.participant.sex,
         session.participant.yearOfStudy ? `Year ${session.participant.yearOfStudy}` : '',
         session.participant.disciplineOfStudy,
-    ].filter(Boolean);
-    const legacyParticipantMeta = [
         session.participant.email,
-        Number.isFinite(session.participant.age) ? `Age ${session.participant.age}` : '',
     ].filter(Boolean);
-    const participantMetaLine = (participantMeta.length > 0 ? participantMeta : legacyParticipantMeta);
 
     return (
         <div className="flex flex-col h-full min-h-0 bg-white rounded-2xl w-full">

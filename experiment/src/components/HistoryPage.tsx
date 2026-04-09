@@ -28,22 +28,16 @@ const participantPrimaryLabel = (participant: ExperimentSessionRecord['participa
 );
 
 const participantSecondaryLabel = (participant: ExperimentSessionRecord['participant']): string => {
-    const modernParts = [
+    const parts = [
+        participant.name && participant.subjectId ? `Name: ${participant.name}` : '',
+        Number.isFinite(participant.age) ? `Age ${participant.age}` : '',
         participant.sex,
         participant.yearOfStudy ? `Year ${participant.yearOfStudy}` : '',
         participant.disciplineOfStudy,
-    ].filter(Boolean);
-
-    if (modernParts.length > 0) {
-        return modernParts.join(' · ');
-    }
-
-    const legacyParts = [
         participant.email,
-        Number.isFinite(participant.age) ? `Age ${participant.age}` : '',
     ].filter(Boolean);
 
-    return legacyParts.length > 0 ? legacyParts.join(' · ') : 'No participant metadata';
+    return parts.length > 0 ? parts.join(' · ') : 'No participant metadata';
 };
 
 const participantSearchText = (participant: ExperimentSessionRecord['participant']): string => [

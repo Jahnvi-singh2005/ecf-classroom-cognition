@@ -76,11 +76,11 @@ export interface ExperimentConfig {
 }
 
 export interface Participant {
-    subjectId: string;
-    sex: string;
-    yearOfStudy: string;
-    disciplineOfStudy: string;
-    // Legacy fields retained for backward compatibility with older saved sessions.
+    // Fields are optional at the model level to support legacy saved sessions.
+    subjectId?: string;
+    sex?: string;
+    yearOfStudy?: string;
+    disciplineOfStudy?: string;
     name?: string;
     age?: number;
     email?: string;
