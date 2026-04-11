@@ -4,6 +4,8 @@ import sys
 import os
 from BrainflowStream import BrainFlowBoard
 
+
+# creating the bids folder 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 bids_folder = os.path.join(script_dir, "my_bids_data")
 
