@@ -26,13 +26,6 @@ export default function ReadingSlide({
     maxTimeSeconds,
     onNext,
 }: ReadingSlideProps) {
-    const formatClock = (ms: number): string => {
-        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    };
-
     const [elapsedMs, setElapsedMs] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const hasAutoAdvanced = useRef(false);
@@ -43,7 +36,6 @@ export default function ReadingSlide({
     const safeMinSeconds = Math.min(Math.max(minTimeSeconds, 0), Math.max(safeMaxSeconds - 0.1, 0));
     const maxTimeMs = Math.round(safeMaxSeconds * 1000);
     const minTimeMs = Math.round(safeMinSeconds * 1000);
-    const hasAdjustedTiming = safeMinSeconds !== minTimeSeconds || safeMaxSeconds !== maxTimeSeconds;
 
     const canProceed = elapsedMs >= minTimeMs;
 
@@ -111,12 +103,6 @@ export default function ReadingSlide({
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [handleManualAdvance]);
-
-    const progressRatio = Math.min(Math.max(elapsedMs / maxTimeMs, 0), 1);
-    const progressPercent = progressRatio * 100;
-    const minProgressPercent = (minTimeMs / maxTimeMs) * 100;
-    const remainingToMin = Math.max(minTimeMs - elapsedMs, 0);
-    const remainingToMax = Math.max(maxTimeMs - elapsedMs, 0);
 
     const renderedParagraphs = useMemo(() => {
         // Parse slide text only when the text itself changes.
@@ -191,55 +177,14 @@ export default function ReadingSlide({
                 </div>
             </div>
 
-            {/* Timer & Controls Bar */}
+            {/* Controls Bar */}
             <div className="mt-3 shrink-0 bg-white/75 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 p-3 md:p-3.5">
-                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 font-semibold text-surface-700">
-                        Elapsed {formatClock(elapsedMs)} / {formatClock(maxTimeMs)}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 font-semibold text-surface-700">
-                        Unlock at {formatClock(minTimeMs)}
-                    </span>
-                </div>
-                {/* Progress Bar */}
-                <div
-                    className="relative h-2 bg-surface-100 rounded-full mb-3 overflow-hidden"
-                    role="progressbar"
-                    aria-label="Slide reading timer"
-                    aria-valuemin={0}
-                    aria-valuemax={maxTimeMs}
-                    aria-valuenow={Math.min(elapsedMs, maxTimeMs)}
-                    aria-valuetext={`${Math.ceil(elapsedMs / 1000)} of ${Math.ceil(maxTimeMs / 1000)} seconds`}
-                >
-                    {/* Min-time marker */}
-                    <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-surface-400 z-10"
-                        style={{ left: `${minProgressPercent}%` }}
-                    />
-                    {/* Progress fill */}
-                    <div
-                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-100 ease-linear ${elapsedMs < minTimeMs
-                            ? 'bg-linear-to-r from-warning to-yellow-400'
-                            : 'bg-linear-to-r from-accent to-primary-400'
-                            }`}
-                        style={{ width: `${progressPercent}%` }}
-                    />
-                </div>
-
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-surface-500">
-                        {!canProceed ? (
-                            <span className="flex items-center gap-1.5">
-                                <span className="inline-block w-2 h-2 rounded-full bg-warning animate-pulse" />
-                                Next available in <strong className="text-surface-700">{formatClock(remainingToMin)}</strong>
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1.5">
-                                <span className="inline-block w-2 h-2 rounded-full bg-accent" />
-                                Auto-advance in <strong className="text-surface-700">{formatClock(remainingToMax)}</strong>
-                            </span>
-                        )}
-                    </div>
+                    <p className="text-xs text-surface-500">
+                        {canProceed
+                            ? 'Press Spacebar or use Next when ready.'
+                            : 'Keep reading. Continue will unlock shortly.'}
+                    </p>
 
                     <button
                         onClick={handleManualAdvance}
@@ -252,14 +197,6 @@ export default function ReadingSlide({
                         {slideIndex === totalSlides - 1 ? 'Finish Reading' : 'Next Slide'} →
                     </button>
                 </div>
-                <div className="mt-2 min-h-4 text-right">
-                    <p className={`text-[11px] text-surface-400 transition-opacity ${canProceed ? 'opacity-100' : 'opacity-0'}`}>
-                        Tip: Press Spacebar to continue
-                    </p>
-                </div>
-                {hasAdjustedTiming && (
-                    <p className="mt-1 text-right text-[11px] text-amber-600">Timing was adjusted to keep min-time below max-time.</p>
-                )}
             </div>
         </div>
     );

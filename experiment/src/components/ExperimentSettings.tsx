@@ -272,7 +272,6 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
     const importFileRef = useRef<HTMLInputElement | null>(null);
 
     const [experimentTitle, setExperimentTitle] = useState(initialConfig.experimentTitle);
-    const [condition, setCondition] = useState(initialConfig.condition);
     const [slideMin, setSlideMin] = useState(String(initialConfig.slideSettings.minTimeSeconds));
     const [slideMax, setSlideMax] = useState(String(initialConfig.slideSettings.maxTimeSeconds));
     const [calibrationEnabled, setCalibrationEnabled] = useState(initialConfig.calibrationSettings.enabled);
@@ -600,7 +599,6 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
             ...initialConfig,
             version: initialConfig.version,
             experimentTitle: experimentTitle.trim() || initialConfig.experimentTitle,
-            condition,
             texts: cloneTexts(workingTexts),
             slideSettings: {
                 minTimeSeconds: slideMinSeconds,
@@ -666,16 +664,6 @@ export default function ExperimentSettings({ initialConfig, onContinue, onBack }
                             <div>
                                 <label className="block text-xs text-surface-500 mb-1">Experiment title</label>
                                 <input value={experimentTitle} onChange={(e) => setExperimentTitle(e.target.value)} className={inputCls} />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-surface-500 mb-1">Condition assignment</label>
-                                <select value={condition} onChange={(e) => setCondition(e.target.value as ExperimentConfig['condition'])} className={inputCls}>
-                                    <option value="group-1">Group 1</option>
-                                    <option value="group-2">Group 2</option>
-                                    <option value="group-3">Group 3</option>
-                                    <option value="group-4">Group 4</option>
-                                </select>
                             </div>
                         </div>
 

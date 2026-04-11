@@ -116,6 +116,13 @@ const DRAFT_LOCAL_KEY_PREFIX = 'exp-draft-unsynced';
 const DRAFT_RETRY_BASE_MS = 1500;
 const DRAFT_RETRY_MAX_MS = 30000;
 
+const GROUP_CONDITIONS: GroupCondition[] = ['group-1', 'group-2', 'group-3', 'group-4'];
+
+const randomGroupCondition = (): GroupCondition => {
+  const index = Math.floor(Math.random() * GROUP_CONDITIONS.length);
+  return GROUP_CONDITIONS[index];
+};
+
 function App() {
   const [config, setConfig] = useState<ExperimentConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +140,7 @@ function App() {
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [assignedCondition, setAssignedCondition] = useState<GroupCondition>('group-1');
+  const [assignedCondition, setAssignedCondition] = useState<GroupCondition>(() => randomGroupCondition());
   const allAnswersRef = useRef<Record<string, TextAssessmentResult>>({});
   const readingAdvanceMarkersRef = useRef<ReadingAdvanceMarker[]>([]);
   const [learnerSelfReport, setLearnerSelfReport] = useState<LearnerSelfReportData | null>(null);
@@ -290,6 +297,7 @@ function App() {
     consent?: ConsentRecord | null;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
+    assignedConditionValue?: GroupCondition;
   }): ExperimentSessionDraft | null => {
     if (!participant || !config || !sessionId) return null;
 
@@ -312,7 +320,7 @@ function App() {
       participantKey: buildParticipantKey(participantPayload),
       participant: participantPayload,
       experimentTitle: config.experimentTitle,
-      assignedCondition,
+      assignedCondition: params.assignedConditionValue || assignedCondition,
       startedAt: sessionStartedAt || previousDraft?.startedAt || now,
       lastUpdatedAt: now,
       lastSyncedAt: now,
@@ -418,6 +426,7 @@ function App() {
     consent?: ConsentRecord | null;
     readingAdvanceMarkers?: ReadingAdvanceMarker[];
     assessmentDraft?: AssessmentDraftState | null;
+    assignedConditionValue?: GroupCondition;
   } = {}) => {
     if (hasPersistedSession) return;
     const draft = buildDraftFromState(params);
@@ -686,7 +695,8 @@ function App() {
     navigate('/');
   }, [navigate]);
 
-  const startFreshSession = useCallback((participantPayload: Participant) => {
+  const startFreshSession = useCallback((participantPayload: Participant, selectedCondition: GroupCondition) => {
+    setAssignedCondition(selectedCondition);
     setParticipant(participantPayload);
     setLearnerSelfReport(null);
     setSessionId(makeSessionId());
@@ -707,10 +717,11 @@ function App() {
       textIndex: 0,
       slideIndex: 0,
       answers: {},
+      assignedConditionValue: selectedCondition,
     });
   }, [checkpointDraft, makeSessionId]);
 
-  const handleRegistration = useCallback(async (data: {
+  const handleRegistration = useCallback((data: {
     name: string;
     age: number;
     email?: string;
@@ -719,9 +730,11 @@ function App() {
     sex: string;
     yearOfStudy: string;
     disciplineOfStudy: string;
+    assignedCondition: GroupCondition;
   }) => {
-    const participantPayload = data as Participant;
-    startFreshSession(participantPayload);
+    const { assignedCondition: selectedCondition, ...participantData } = data;
+    const participantPayload = participantData as Participant;
+    startFreshSession(participantPayload, selectedCondition);
   }, [startFreshSession]);
 
   const handleLearnerSelfReportSubmit = useCallback((report: Omit<LearnerSelfReportData, 'submittedAt'>) => {

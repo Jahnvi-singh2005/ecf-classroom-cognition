@@ -67,13 +67,6 @@ const clampWords = (value: string, limit: number): string => {
 
 const isObjectiveQuestion = (type?: Question['type']): boolean => type === 'mcq' || type === 'objective';
 
-const formatClock = (ms: number): string => {
-    const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-};
-
 interface McqOptionsProps {
     options: NonNullable<Question['options']>;
     selectedOptionId: string | null;
@@ -161,9 +154,6 @@ export default function PostAssessment({
 
     const canStartTyping = elapsedMs >= minThinkingMs;
     const canSubmit = elapsedMs >= minQuestionMs;
-    const questionRemainingMs = Math.max(maxQuestionMs - elapsedMs, 0);
-    const minRemainingMs = Math.max(minQuestionMs - elapsedMs, 0);
-    const thinkingRemainingMs = Math.max(minThinkingMs - elapsedMs, 0);
 
     const feedbackScale = useMemo(() => {
         const values: number[] = [];
@@ -312,7 +302,7 @@ export default function PostAssessment({
     const startTyping = useCallback(() => {
         if (isObjectiveQuestion(currentQuestion?.type)) return;
         if (!canStartTyping) {
-            setHint(`You can start typing in ${formatClock(thinkingRemainingMs)}.`);
+            setHint('Thinking window is still active. Please wait a moment and try again.');
             return;
         }
 
@@ -330,11 +320,11 @@ export default function PostAssessment({
                 textAreaRef.current.value.length,
             );
         });
-    }, [canStartTyping, currentQuestion?.type, thinkingRemainingMs]);
+    }, [canStartTyping, currentQuestion?.type]);
 
     const submitTyping = useCallback(() => {
         if (!canSubmit) {
-            setHint(`You can submit in ${formatClock(minRemainingMs)}.`);
+            setHint('Submission is still locked briefly. Please try again in a moment.');
             return;
         }
 
@@ -344,7 +334,7 @@ export default function PostAssessment({
         }
 
         goNext(false);
-    }, [activeQuestion.selectedOptionId, canSubmit, currentQuestion?.type, goNext, minRemainingMs]);
+    }, [activeQuestion.selectedOptionId, canSubmit, currentQuestion?.type, goNext]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -476,8 +466,8 @@ export default function PostAssessment({
 
     const isMcq = isObjectiveQuestion(currentQuestion?.type);
     const isThinking = mode === 'thinking' && !isMcq;
-    const thinkingProgress = minThinkingMs > 0 ? Math.min((elapsedMs / minThinkingMs) * 100, 100) : 100;
     const heading = currentQuestion?.heading || `QUESTION - ${index + 1}`;
+    const questionNotes = currentQuestion?.notes?.filter((note) => note.trim()) || [];
 
     return (
         <div className="h-full min-h-0 flex items-center justify-center p-3 md:p-4 overflow-hidden">
@@ -491,25 +481,6 @@ export default function PostAssessment({
                         <div>{heading}</div>
                         <div>Question {index + 1} / {normalizedQuestions.length}</div>
                         {!isMcq && <div className="mt-1">Max {maxWords} words</div>}
-                    </div>
-                </div>
-
-                <div className="mb-3 shrink-0 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div className="rounded-xl border border-surface-200 bg-white px-3 py-2">
-                        <p className="text-surface-500 font-semibold">Remaining</p>
-                        <p className="text-surface-900 font-bold mt-0.5">{formatClock(questionRemainingMs)}</p>
-                    </div>
-                    <div className="rounded-xl border border-surface-200 bg-white px-3 py-2">
-                        <p className="text-surface-500 font-semibold">Min submit</p>
-                        <p className="text-surface-900 font-bold mt-0.5">{formatClock(minRemainingMs)}</p>
-                    </div>
-                    <div className="rounded-xl border border-surface-200 bg-white px-3 py-2">
-                        <p className="text-surface-500 font-semibold">Thinking</p>
-                        <p className="text-surface-900 font-bold mt-0.5">{formatClock(thinkingRemainingMs)}</p>
-                    </div>
-                    <div className="rounded-xl border border-surface-200 bg-white px-3 py-2">
-                        <p className="text-surface-500 font-semibold">Window</p>
-                        <p className="text-surface-900 font-bold mt-0.5">{formatClock(maxQuestionMs)}</p>
                     </div>
                 </div>
 
@@ -535,24 +506,14 @@ export default function PostAssessment({
                                 <p className="text-lg font-bold text-surface-900">{isThinking ? 'Thinking window' : 'Typing window'}</p>
                                 <p className="text-sm text-surface-600 mt-1">
                                     {isThinking
-                                        ? `Think for ${formatClock(thinkingRemainingMs)} more, then press Space to start typing.`
+                                        ? 'Read the prompt carefully, then press Space to start typing.'
                                         : 'Type your answer. Press Space outside the text box to submit.'}
                                 </p>
-
-                                <div className="mt-3 h-1.5 bg-white/80 rounded-full overflow-hidden border border-surface-200">
-                                    <div
-                                        className={`h-full transition-all duration-1000 linear ${isThinking ? 'bg-warning' : 'bg-accent'}`}
-                                        style={{ width: `${isThinking ? thinkingProgress : 100}%` }}
-                                    />
-                                </div>
                             </div>
 
                             <div className="rounded-2xl border border-surface-200 bg-white/70 p-3.5">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-surface-600 mb-2">Timing guide</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-surface-600 mb-2">Response guide</p>
                                 <div className="space-y-1 text-sm text-surface-700">
-                                    <p>Thinking min: <strong>{formatClock(settings.thinkingMinSeconds * 1000)}</strong></p>
-                                    <p>Total min: <strong>{formatClock(minQuestionMs)}</strong></p>
-                                    <p>Auto-next: <strong>{formatClock(maxQuestionMs)}</strong></p>
                                     <p>Max words: <strong>{maxWords}</strong></p>
                                     {(currentQuestion?.minWords && currentQuestion?.maxWords) && (
                                         <p>Target words: <strong>{currentQuestion.minWords}–{currentQuestion.maxWords}</strong></p>
@@ -578,17 +539,20 @@ export default function PostAssessment({
 
                         <div className="mt-2.5 flex items-center justify-between text-xs text-surface-500 shrink-0">
                             <span>Max {maxWords} words</span>
-                            <span>{formatClock(questionRemainingMs)} left</span>
+                            {(currentQuestion?.minWords && currentQuestion?.maxWords)
+                                ? <span>Target {currentQuestion.minWords}–{currentQuestion.maxWords} words</span>
+                                : <span>Answer clearly and concisely</span>}
                         </div>
                     </>
                 )}
 
-                <div className="mt-3 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm text-surface-700 shrink-0">
-                    <p>Minimum: {formatClock(minQuestionMs)}; maximum: {formatClock(maxQuestionMs)}</p>
-                    {currentQuestion?.notes?.map((note, noteIndex) => (
-                        <p key={`${currentQuestion.id}-note-${noteIndex}`} className="mt-1">• {note}</p>
-                    ))}
-                </div>
+                {questionNotes.length > 0 && (
+                    <div className="mt-3 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm text-surface-700 shrink-0">
+                        {questionNotes.map((note, noteIndex) => (
+                            <p key={`${currentQuestion?.id || activeQuestion.questionId}-note-${noteIndex}`} className="mt-1">• {note}</p>
+                        ))}
+                    </div>
+                )}
 
                 {hint && (
                     <p className="text-sm text-amber-700 mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{hint}</p>
@@ -614,19 +578,6 @@ export default function PostAssessment({
                     )}
                 </div>
 
-                <div
-                    className="mt-3 h-2 bg-surface-100 rounded-full overflow-hidden shrink-0"
-                    role="progressbar"
-                    aria-label="Question timer"
-                    aria-valuemin={0}
-                    aria-valuemax={maxQuestionMs}
-                    aria-valuenow={Math.min(elapsedMs, maxQuestionMs)}
-                >
-                    <div
-                        className={`h-full transition-all duration-1000 linear ${elapsedMs < minQuestionMs ? 'bg-warning' : 'bg-accent'}`}
-                        style={{ width: `${Math.min((elapsedMs / maxQuestionMs) * 100, 100)}%` }}
-                    />
-                </div>
             </div>
         </div>
     );

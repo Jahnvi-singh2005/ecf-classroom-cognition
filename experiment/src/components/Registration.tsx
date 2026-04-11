@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { GroupCondition } from '../types';
 
 interface RegistrationProps {
     onSubmit: (data: {
@@ -10,8 +11,21 @@ interface RegistrationProps {
         sex: string;
         yearOfStudy: string;
         disciplineOfStudy: string;
+        assignedCondition: GroupCondition;
     }) => void;
 }
+
+const GROUP_OPTIONS: Array<{ value: GroupCondition; label: string }> = [
+    { value: 'group-1', label: 'Group 1' },
+    { value: 'group-2', label: 'Group 2' },
+    { value: 'group-3', label: 'Group 3' },
+    { value: 'group-4', label: 'Group 4' },
+];
+
+const randomCondition = (): GroupCondition => {
+    const index = Math.floor(Math.random() * GROUP_OPTIONS.length);
+    return GROUP_OPTIONS[index].value;
+};
 
 export default function Registration({
     onSubmit,
@@ -24,6 +38,7 @@ export default function Registration({
     const [sex, setSex] = useState('');
     const [yearOfStudy, setYearOfStudy] = useState('');
     const [disciplineOfStudy, setDisciplineOfStudy] = useState('');
+    const [assignedCondition, setAssignedCondition] = useState<GroupCondition>(() => randomCondition());
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const validate = () => {
@@ -61,6 +76,7 @@ export default function Registration({
             sex: sex.trim(),
             yearOfStudy: yearOfStudy.trim(),
             disciplineOfStudy: disciplineOfStudy.trim(),
+            assignedCondition,
         });
     };
 
@@ -86,6 +102,28 @@ export default function Registration({
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+                        <div className="rounded-2xl border border-surface-200 bg-surface-50/70 p-4 md:p-5">
+                            <h2 className="text-sm font-semibold text-surface-800 mb-3">Experiment Group</h2>
+                            <div>
+                                <label htmlFor="assigned-condition" className="block text-sm font-semibold text-surface-700 mb-1.5">
+                                    Assigned Group <span className="text-red-400">*</span>
+                                </label>
+                                <select
+                                    id="assigned-condition"
+                                    value={assignedCondition}
+                                    onChange={(e) => setAssignedCondition(e.target.value as GroupCondition)}
+                                    className={inputClasses('assignedCondition')}
+                                >
+                                    {GROUP_OPTIONS.map((group) => (
+                                        <option key={group.value} value={group.value}>{group.label}</option>
+                                    ))}
+                                </select>
+                                <p className="mt-1 text-xs text-surface-500">
+                                    A random group is preselected for each participant. You may change it if needed.
+                                </p>
+                            </div>
+                        </div>
+
                         <div className="rounded-2xl border border-surface-200 bg-surface-50/70 p-4 md:p-5">
                             <h2 className="text-sm font-semibold text-surface-800 mb-3">Basic Information</h2>
                             <div className="grid md:grid-cols-2 gap-4">
