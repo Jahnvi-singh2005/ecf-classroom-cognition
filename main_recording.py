@@ -12,6 +12,7 @@ BOARD_TYPE = 'synthetic' # 'synthetic' for testing, 'cyton-daisy' for experiment
 
 if sys.platform.startswith('win'):
     # WINDOWS SETTINGS
+    # Find the appropriate ports as per the device !!!
     EEG_PORT = 'COM7'
     MARKER_PORT = 'COM4'
 
