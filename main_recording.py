@@ -15,10 +15,7 @@ if sys.platform.startswith('win'):
     EEG_PORT = 'COM7'
     MARKER_PORT = 'COM4'
 
-else:
-    # macOS SETTINGS 
-    EEG_PORT = '' 
-    MARKER_PORT = '/dev/tty.Bluetooth-Incoming-Port'    
+  
 
 def run_experiment():
 
