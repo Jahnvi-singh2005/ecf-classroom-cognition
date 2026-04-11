@@ -7,7 +7,7 @@ from BrainflowStream import BrainFlowBoard
 script_dir = os.path.dirname(os.path.abspath(__file__))
 bids_folder = os.path.join(script_dir, "my_bids_data")
 
-BOARD_TYPE = 'synthetic' # 'synthetic' for testing, 'cyton-daisy' for experiment
+BOARD_TYPE = 'cyton-daisy' # 'synthetic' for testing, 'cyton-daisy' for experiment
 
 
 if sys.platform.startswith('win'):
