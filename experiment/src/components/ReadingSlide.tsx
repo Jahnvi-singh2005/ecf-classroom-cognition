@@ -104,6 +104,10 @@ export default function ReadingSlide({
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [handleManualAdvance]);
 
+    const progressRatio = Math.min(Math.max(elapsedMs / maxTimeMs, 0), 1);
+    const progressPercent = progressRatio * 100;
+    const minProgressPercent = (minTimeMs / maxTimeMs) * 100;
+
     const renderedParagraphs = useMemo(() => {
         // Parse slide text only when the text itself changes.
         const paragraphs = text.split('\n').filter((p) => p.trim());
@@ -196,6 +200,27 @@ export default function ReadingSlide({
                     >
                         {slideIndex === totalSlides - 1 ? 'Finish Reading' : 'Next Slide'} →
                     </button>
+                </div>
+
+                <div
+                    className="relative mt-3 h-2 bg-surface-100 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-label="Slide reading progress"
+                    aria-valuemin={0}
+                    aria-valuemax={maxTimeMs}
+                    aria-valuenow={Math.min(elapsedMs, maxTimeMs)}
+                >
+                    <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-surface-400 z-10"
+                        style={{ left: `${minProgressPercent}%` }}
+                    />
+                    <div
+                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-100 ease-linear ${elapsedMs < minTimeMs
+                            ? 'bg-linear-to-r from-warning to-yellow-400'
+                            : 'bg-linear-to-r from-accent to-primary-400'
+                            }`}
+                        style={{ width: `${progressPercent}%` }}
+                    />
                 </div>
             </div>
         </div>

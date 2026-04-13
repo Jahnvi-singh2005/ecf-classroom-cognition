@@ -578,6 +578,20 @@ export default function PostAssessment({
                     )}
                 </div>
 
+                <div
+                    className="mt-3 h-2 bg-surface-100 rounded-full overflow-hidden shrink-0"
+                    role="progressbar"
+                    aria-label="Question progress"
+                    aria-valuemin={0}
+                    aria-valuemax={maxQuestionMs}
+                    aria-valuenow={Math.min(elapsedMs, maxQuestionMs)}
+                >
+                    <div
+                        className={`h-full transition-all duration-1000 linear ${elapsedMs < minQuestionMs ? 'bg-warning' : 'bg-accent'}`}
+                        style={{ width: `${Math.min((elapsedMs / maxQuestionMs) * 100, 100)}%` }}
+                    />
+                </div>
+
             </div>
         </div>
     );

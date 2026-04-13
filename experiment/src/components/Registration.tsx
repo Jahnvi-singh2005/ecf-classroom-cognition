@@ -22,6 +22,8 @@ const GROUP_OPTIONS: Array<{ value: GroupCondition; label: string }> = [
     { value: 'group-4', label: 'Group 4' },
 ];
 
+const VALID_SEX_OPTIONS = ['Male', 'Female'] as const;
+
 const randomCondition = (): GroupCondition => {
     const index = Math.floor(Math.random() * GROUP_OPTIONS.length);
     return GROUP_OPTIONS[index].value;
@@ -50,7 +52,11 @@ export default function Registration({
             newErrors.age = 'Please enter a valid age (1-120)';
         }
         if (!subjectId.trim()) newErrors.subjectId = 'Subject ID is required';
-        if (!sex.trim()) newErrors.sex = 'Sex is required';
+        if (!sex.trim()) {
+            newErrors.sex = 'Sex is required';
+        } else if (!VALID_SEX_OPTIONS.includes(sex.trim() as (typeof VALID_SEX_OPTIONS)[number])) {
+            newErrors.sex = 'Please select Male or Female';
+        }
         if (!yearOfStudy.trim()) newErrors.yearOfStudy = 'Year of study is required';
         if (!disciplineOfStudy.trim()) newErrors.disciplineOfStudy = 'Discipline of study is required';
         if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -190,10 +196,8 @@ export default function Registration({
                                         className={inputClasses('sex')}
                                     >
                                         <option value="">Select</option>
-                                        <option value="Female">Female</option>
                                         <option value="Male">Male</option>
-                                        <option value="Non-binary">Non-binary</option>
-                                        <option value="Prefer not to say">Prefer not to say</option>
+                                        <option value="Female">Female</option>
                                     </select>
                                     {errors.sex && <p className="mt-1 text-sm text-red-500">{errors.sex}</p>}
                                 </div>
