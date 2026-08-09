@@ -8,7 +8,7 @@
 // or probe+textbox pairs, per the slide-type table in build-spec §15).
 
 import { getState, setState } from '../state.js';
-import { getTextSlides } from '../content.js';
+import { getCondition, getTextSlides } from '../content.js';
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
@@ -299,7 +299,8 @@ export function mount(container) {
   containerRef = container;
 
   const { currentTextIndex, currentSlideIndex, assignedGroup, content } = getState();
-  const slides = getTextSlides(assignedGroup, currentTextIndex);
+  const condition = getCondition(assignedGroup, currentTextIndex);
+  const slides = getTextSlides(condition, currentTextIndex);
 
   probeIndex = currentSlideIndex;
   probeSlide = slides[probeIndex];

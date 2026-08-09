@@ -4,7 +4,7 @@
 // task response, regardless of correctness.
 
 import { getState, setState } from '../state.js';
-import { getTextSlides } from '../content.js';
+import { getCondition, getTextSlides } from '../content.js';
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
@@ -43,7 +43,8 @@ function advance() {
   // sendMarker(MARKERS.GUIDED_RESOLUTION_END);
 
   const { currentTextIndex, assignedGroup } = getState();
-  const slides = getTextSlides(assignedGroup, currentTextIndex);
+  const condition = getCondition(assignedGroup, currentTextIndex);
+  const slides = getTextSlides(condition, currentTextIndex);
   const nextIndex = resolutionSlideIndex + 1;
   setState({ currentSlideIndex: nextIndex });
 
@@ -66,7 +67,8 @@ export function mount(container) {
   elapsedMs = 0;
 
   const { currentTextIndex, currentSlideIndex, assignedGroup, content, texts } = getState();
-  const slides = getTextSlides(assignedGroup, currentTextIndex);
+  const condition = getCondition(assignedGroup, currentTextIndex);
+  const slides = getTextSlides(condition, currentTextIndex);
   resolutionSlideIndex = currentSlideIndex;
   const resolutionSlide = slides[resolutionSlideIndex];
 

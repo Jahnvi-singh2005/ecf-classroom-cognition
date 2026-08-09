@@ -27,17 +27,19 @@ export function getTextMeta(textIndex) {
   return content?.texts?.[textKey] ?? null;
 }
 
-// The group-specific content block for a text: { condition, slides, praQuestions }.
-export function getGroupContent(group, textIndex) {
+// The condition-specific content block for a text: { slides, praQuestions }. Content
+// is authored once per (text, condition) pair — not per group. Which condition a
+// given group sees for a given text is decided separately, by getCondition() above
+// (the Latin square); this function just fetches that condition's actual content.
+export function getConditionContent(condition, textIndex) {
   const textMeta = getTextMeta(textIndex);
-  const groupKey = `group${group}`;
-  return textMeta?.groups?.[groupKey] ?? null;
+  return textMeta?.conditions?.[condition] ?? null;
 }
 
-export function getTextSlides(group, textIndex) {
-  return getGroupContent(group, textIndex)?.slides ?? [];
+export function getTextSlides(condition, textIndex) {
+  return getConditionContent(condition, textIndex)?.slides ?? [];
 }
 
-export function getPraQuestions(group, textIndex) {
-  return getGroupContent(group, textIndex)?.praQuestions ?? [];
+export function getPraQuestions(condition, textIndex) {
+  return getConditionContent(condition, textIndex)?.praQuestions ?? [];
 }

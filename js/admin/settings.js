@@ -2,14 +2,23 @@
 // rebuild plan §8.1. Password-gated, three tabs: General Settings, Content Editor,
 // Security. All saves go through firebase.js's saveContent()/changePassword().
 //
-// PRA questions are edited exclusively via the Content Editor's "Assessment
-// questions" section (Section A), matching build-spec's self-contained PRA question
-// object schema (§5.4) and how pra.js actually reads content (a dedicated
-// praQuestions array, never scanned out of `slides`). The slide-types table in
-// build-spec §15 / rebuild plan §8.1 also lists four "PRA — ..." entries as if they
-// were addable Slides-Editor types, but that would be dead data no runtime code
-// reads — slides.js's Section B here only offers the 6 types that are genuinely part
-// of the `slides` array (pure-text/active-*/constructive-*/guided-resolution).
+// Content Editor is organised Text (top-level tab) → Condition (Passive/Active/
+// Constructive/Control, one section each) — content lives at content.texts[textId]
+// .conditions[condition], not per group. A 4×4 Latin square means every text has
+// exactly one content-set per condition, shared by whichever group the square
+// assigns that condition to for that text; there is nothing group-specific to author.
+// The Latin square itself (Tab 1) is unrelated to this and untouched by this design —
+// it only decides which condition a given group sees for a given text at runtime
+// (content.js's getCondition()), never where that condition's content is stored.
+//
+// PRA questions are edited exclusively via each condition section's "Assessment
+// questions" sub-section, matching build-spec's self-contained PRA question object
+// schema (§5.4) and how pra.js actually reads content (a dedicated praQuestions
+// array, never scanned out of `slides`). The slide-types table in build-spec §15 /
+// rebuild plan §8.1 also lists four "PRA — ..." entries as if they were addable
+// Slides-Editor types, but that would be dead data no runtime code reads — the
+// Slides Editor sub-section here only offers the 6 types that are genuinely part of
+// the `slides` array (pure-text/active-*/constructive-*/guided-resolution).
 
 import { initFirebase, loadContent, saveContent, validatePassword, changePassword } from '../firebase.js';
 import { LATIN_SQUARE_DEFAULT } from '../latinSquare.js';
@@ -51,9 +60,8 @@ let appEl = null;
 let workingConfig = null;
 let unlockedPassword = null;
 let activeTab = 'general';
-let activeGroupIndex = 0;
 let activeTextIndex = 0;
-let lastInteractedSlideIndex = null;
+let lastInteractedSlideIndex = { passive: null, active: null, constructive: null, control: null };
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -75,11 +83,11 @@ function createDefaultText(id) {
   return {
     id,
     title: '',
-    groups: {
-      group1: { condition: null, slides: [], praQuestions: [] },
-      group2: { condition: null, slides: [], praQuestions: [] },
-      group3: { condition: null, slides: [], praQuestions: [] },
-      group4: { condition: null, slides: [], praQuestions: [] },
+    conditions: {
+      passive: { slides: [], praQuestions: [] },
+      active: { slides: [], praQuestions: [] },
+      constructive: { slides: [], praQuestions: [] },
+      control: { slides: [], praQuestions: [] },
     },
   };
 }
@@ -129,18 +137,6 @@ function createDefaultSlide(type) {
   if (fields.hasOptions) slide.options = { A: '', B: '', C: '', D: '', correct: 'A' };
   if (fields.hasWords) { slide.timing.minWords = 0; slide.timing.maxWords = 0; }
   return slide;
-}
-
-// The `condition` field stored per group is denormalised display metadata (build-spec
-// §5.4 shows it on every group block) — the Latin square is the real source of truth
-// at runtime (content.js's getCondition()), so keep this field in sync on every edit.
-function syncConditions(config) {
-  TEXT_KEYS.forEach((textKey) => {
-    GROUP_KEYS.forEach((groupKey) => {
-      const group = config.texts[textKey]?.groups?.[groupKey];
-      if (group) group.condition = config.latinSquare?.[groupKey]?.[textKey] || null;
-    });
-  });
 }
 
 // ─── Password gate ─────────────────────────────────────────────────────────
@@ -295,7 +291,6 @@ function renderGeneralTab(container) {
     select.addEventListener('change', () => {
       const { groupKey, textKey } = select.dataset;
       workingConfig.latinSquare[groupKey][textKey] = select.value;
-      syncConditions(workingConfig);
     });
   });
 
@@ -321,88 +316,49 @@ function handleResetDefaults() {
   const fresh = createDefaultConfig();
   workingConfig.globalTimingDefaults = fresh.globalTimingDefaults;
   workingConfig.latinSquare = fresh.latinSquare;
-  syncConditions(workingConfig);
   render();
 }
 
 // ─── Tab 2: Content Editor ──────────────────────────────────────────────────
+//
+// Text is the top-level tab (Text 1–4). Within a text, content is authored once
+// per condition (Passive/Active/Constructive/Control) — not per group — since a
+// 4×4 Latin square means every text has exactly one content-set per condition,
+// shared by whichever group the square assigns that condition to. The Latin
+// square itself (Tab 1) is unchanged: it only decides which condition a group
+// sees for a given text, not where that condition's content lives.
 
 function renderContentTab(container) {
   container.innerHTML = `
     <div class="group-tabs">
-      ${GROUP_KEYS.map((gk, i) => `<div class="group-tab ${i === activeGroupIndex ? 'active' : ''}" data-group-index="${i}">Group ${i + 1}</div>`).join('')}
+      ${TEXT_KEYS.map((tk, i) => `<div class="group-tab ${i === activeTextIndex ? 'active' : ''}" data-text-index="${i}">Text ${i + 1}</div>`).join('')}
     </div>
-    <div class="content-editor-body">
-      <div class="text-list" id="text-list"></div>
-      <div class="content-editor-panel" id="content-editor-panel"></div>
-    </div>
+    <div class="content-editor-panel" id="content-editor-panel"></div>
   `;
 
   container.querySelectorAll('.group-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
-      activeGroupIndex = Number(tab.dataset.groupIndex);
-      lastInteractedSlideIndex = null;
+      activeTextIndex = Number(tab.dataset.textIndex);
+      lastInteractedSlideIndex = { passive: null, active: null, constructive: null, control: null };
       render();
     });
   });
 
-  renderTextList(container.querySelector('#text-list'));
   renderEditorPanel(container.querySelector('#content-editor-panel'));
 }
 
-function renderTextList(container) {
-  container.innerHTML = `
-    <div class="text-list-title">Texts</div>
-    ${TEXT_KEYS.map((tk, i) => {
-      const text = workingConfig.texts[tk];
-      return `
-        <div class="text-list-item ${i === activeTextIndex ? 'active' : ''}" data-text-index="${i}">
-          <div class="title">Text ${i + 1}</div>
-          <div class="subtitle">${escapeHtml(text.title) || '(untitled)'}</div>
-        </div>
-      `;
-    }).join('')}
-  `;
-
-  container.querySelectorAll('.text-list-item').forEach((item) => {
-    item.addEventListener('click', () => {
-      activeTextIndex = Number(item.dataset.textIndex);
-      lastInteractedSlideIndex = null;
-      render();
-    });
-  });
-}
-
 function renderEditorPanel(container) {
-  const groupKey = GROUP_KEYS[activeGroupIndex];
   const textKey = TEXT_KEYS[activeTextIndex];
   const text = workingConfig.texts[textKey];
-  const group = text.groups[groupKey];
-  const condition = workingConfig.latinSquare[groupKey][textKey];
 
   container.innerHTML = `
     <div class="content-editor-header">
-      <div>
-        <input type="text" id="text-title-input" value="${escapeAttr(text.title)}" placeholder="Text ${activeTextIndex + 1} title"
-          style="font-size:16px;font-weight:600;color:var(--text);border:none;background:transparent;font-family:var(--font-ui);padding:0 0 2px;outline:none;border-bottom:1px dashed var(--border);"/>
-        <div class="condition">Condition: <strong>${CONDITION_LABELS[condition] || 'Unassigned'}</strong></div>
-      </div>
+      <input type="text" id="text-title-input" value="${escapeAttr(text.title)}" placeholder="Text ${activeTextIndex + 1} title"
+        style="font-size:16px;font-weight:600;color:var(--text);border:none;background:transparent;font-family:var(--font-ui);padding:0 0 4px;outline:none;border-bottom:1px dashed var(--border);width:100%;max-width:480px;"/>
     </div>
-
-    <div class="section-heading-row">
-      <h3>Assessment questions (objective + short-answer)</h3>
-      <button type="button" class="btn btn-secondary" id="btn-add-question" style="font-size:12px;padding:7px 16px;">+ Add question</button>
-    </div>
-    <div id="question-cards"></div>
-
-    <div class="section-heading-row">
-      <h3>Slides editor</h3>
-      <button type="button" class="btn btn-secondary" id="btn-add-slide" style="font-size:12px;padding:7px 16px;">+ Add slide</button>
-    </div>
-    <div id="slide-cards"></div>
-
+    <div id="condition-sections"></div>
     <div class="settings-actions">
-      <button type="button" id="btn-save-slides" class="btn btn-primary" style="width:auto;margin-top:0;padding:10px 24px;">Save slides</button>
+      <button type="button" id="btn-save-slides" class="btn btn-primary" style="width:auto;margin-top:0;padding:10px 24px;">Save</button>
     </div>
   `;
 
@@ -410,16 +366,43 @@ function renderEditorPanel(container) {
     text.title = event.target.value;
   });
 
-  renderQuestionCards(container.querySelector('#question-cards'), group);
-  renderSlideCards(container.querySelector('#slide-cards'), group);
+  const sectionsEl = container.querySelector('#condition-sections');
+  sectionsEl.innerHTML = CONDITIONS.map((c) => `
+    <div class="condition-section">
+      <div class="condition-section-title">${CONDITION_LABELS[c]}</div>
 
-  container.querySelector('#btn-add-question').addEventListener('click', () => {
-    group.praQuestions.push(createDefaultQuestion());
-    render();
+      <div class="section-heading-row" style="margin-top:0;">
+        <h3>Assessment questions (objective + short-answer)</h3>
+        <button type="button" class="btn btn-secondary btn-add-question" data-condition="${c}" style="font-size:12px;padding:7px 16px;">+ Add question</button>
+      </div>
+      <div class="question-cards" data-condition="${c}"></div>
+
+      <div class="section-heading-row">
+        <h3>Slides editor</h3>
+        <button type="button" class="btn btn-secondary btn-add-slide" data-condition="${c}" style="font-size:12px;padding:7px 16px;">+ Add slide</button>
+      </div>
+      <div class="slide-cards" data-condition="${c}"></div>
+    </div>
+  `).join('');
+
+  CONDITIONS.forEach((c) => {
+    const bucket = text.conditions[c];
+    renderQuestionCards(sectionsEl.querySelector(`.question-cards[data-condition="${c}"]`), bucket);
+    renderSlideCards(sectionsEl.querySelector(`.slide-cards[data-condition="${c}"]`), bucket, c);
   });
 
-  container.querySelector('#btn-add-slide').addEventListener('click', () => {
-    openSlideTypePicker(group);
+  sectionsEl.querySelectorAll('.btn-add-question').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      text.conditions[btn.dataset.condition].praQuestions.push(createDefaultQuestion());
+      render();
+    });
+  });
+
+  sectionsEl.querySelectorAll('.btn-add-slide').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const c = btn.dataset.condition;
+      openSlideTypePicker(text.conditions[c], c);
+    });
   });
 
   container.querySelector('#btn-save-slides').addEventListener('click', handleSaveConfig);
@@ -554,7 +537,7 @@ function bindQuestionCardEvents(container, group) {
 
 // ─── Section B: Slides Editor ───────────────────────────────────────────────
 
-function renderSlideCards(container, group) {
+function renderSlideCards(container, group, conditionKey) {
   const slides = group.slides;
 
   if (slides.length === 0) {
@@ -608,16 +591,16 @@ function renderSlideCards(container, group) {
     `;
   }).join('');
 
-  bindSlideCardEvents(container, group);
+  bindSlideCardEvents(container, group, conditionKey);
 }
 
-function bindSlideCardEvents(container, group) {
+function bindSlideCardEvents(container, group, conditionKey) {
   container.querySelectorAll('[data-slide-id]').forEach((card) => {
     const id = card.dataset.slideId;
     const slide = group.slides.find((s) => s.id === id);
 
     card.addEventListener('click', () => {
-      lastInteractedSlideIndex = group.slides.findIndex((s) => s.id === id);
+      lastInteractedSlideIndex[conditionKey] = group.slides.findIndex((s) => s.id === id);
     });
 
     card.querySelectorAll('[data-s-field="content"]').forEach((el) => {
@@ -659,15 +642,16 @@ function bindSlideCardEvents(container, group) {
         } else if (action === 'down' && index < group.slides.length - 1) {
           [group.slides[index + 1], group.slides[index]] = [group.slides[index], group.slides[index + 1]];
         }
-        lastInteractedSlideIndex = Math.max(0, Math.min(index, group.slides.length - 1));
+        lastInteractedSlideIndex[conditionKey] = Math.max(0, Math.min(index, group.slides.length - 1));
         render();
       });
     });
   });
 }
 
-function openSlideTypePicker(group) {
-  const insertAt = (lastInteractedSlideIndex === null ? group.slides.length - 1 : lastInteractedSlideIndex) + 1;
+function openSlideTypePicker(group, conditionKey) {
+  const lastIndex = lastInteractedSlideIndex[conditionKey];
+  const insertAt = (lastIndex === null ? group.slides.length - 1 : lastIndex) + 1;
 
   const picker = document.createElement('div');
   picker.className = 'editor-card';
@@ -684,13 +668,13 @@ function openSlideTypePicker(group) {
     </div>
   `;
 
-  const slideCardsEl = appEl.querySelector('#slide-cards');
+  const slideCardsEl = appEl.querySelector(`.slide-cards[data-condition="${conditionKey}"]`);
   slideCardsEl.prepend(picker);
 
   picker.querySelector('#slide-type-picker-confirm').addEventListener('click', () => {
     const type = picker.querySelector('#slide-type-picker-select').value;
     group.slides.splice(insertAt, 0, createDefaultSlide(type));
-    lastInteractedSlideIndex = insertAt;
+    lastInteractedSlideIndex[conditionKey] = insertAt;
     render();
   });
 
@@ -746,7 +730,6 @@ async function initAdminApp() {
 
   const loaded = await loadContent();
   workingConfig = loaded ? deepClone(loaded) : createDefaultConfig();
-  syncConditions(workingConfig);
 
   renderPasswordGate();
 }

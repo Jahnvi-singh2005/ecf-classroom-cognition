@@ -10,7 +10,7 @@
 // is what routes back into stimulus.js for the next section's prose.
 
 import { getState, setState } from '../state.js';
-import { getCondition, getGroupContent, getTextMeta, getTextSlides } from '../content.js';
+import { getCondition, getConditionContent, getTextMeta, getTextSlides } from '../content.js';
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
@@ -75,7 +75,8 @@ function advance(advancedBy) {
   unregisterHandler('space');
 
   const { currentTextIndex, currentSlideIndex, assignedGroup } = getState();
-  const slides = getTextSlides(assignedGroup, currentTextIndex);
+  const condition = getCondition(assignedGroup, currentTextIndex);
+  const slides = getTextSlides(condition, currentTextIndex);
 
   appendReadingMarker({
     slideIndex: currentSlideIndex,
@@ -121,9 +122,9 @@ export function mount(container) {
 
   const { currentTextIndex, currentSlideIndex, assignedGroup, content } = getState();
   const condition = getCondition(assignedGroup, currentTextIndex);
-  const groupContent = getGroupContent(assignedGroup, currentTextIndex);
+  const conditionContent = getConditionContent(condition, currentTextIndex);
   const textMeta = getTextMeta(currentTextIndex);
-  const slides = groupContent?.slides ?? [];
+  const slides = conditionContent?.slides ?? [];
   const slide = slides[currentSlideIndex];
 
   if (!slide || slide.type !== 'pure-text') {
