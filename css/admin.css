@@ -1,0 +1,96 @@
+/* admin.css — Settings + history shared styles. Loaded alongside tokens.css and
+   main.css, which already provide shared primitives (.btn, .field, typography,
+   .banner, .field-error). This file adds only what's specific to the admin shell:
+   the dark sidebar, data tables, slide-type badges, and the content editor layout. */
+
+body { background: #F0F0EE; }
+
+.admin-shell { min-height: 100vh; display: flex; }
+.admin-sidebar { width: 220px; background: #1A1A18; padding: 24px 0; flex-shrink: 0; }
+.admin-sidebar-title { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #6B6B63; padding: 0 20px 16px; border-bottom: 1px solid #2A2A28; margin-bottom: 8px; }
+.admin-nav-item { padding: 9px 20px; font-size: 13px; color: #9B9B93; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.admin-nav-item.active { background: #252523; color: #F5F5F3; }
+.admin-nav-item::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+.admin-main { flex: 1; padding: 32px 36px; overflow-y: auto; }
+.admin-main.no-pad { padding: 0; display: flex; flex-direction: column; }
+
+.settings-section-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.settings-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+.settings-table th { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); }
+.settings-table td { padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--text); }
+.settings-table tr:hover td { background: var(--bg); }
+.settings-input { font-family: var(--font-ui); font-size: 13px; width: 72px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); text-align: center; }
+.settings-actions { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 8px; }
+.slide-type-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; letter-spacing: .06em; text-transform: uppercase; }
+
+.settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.settings-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.settings-stack { display: flex; flex-direction: column; gap: 20px; }
+.settings-small-field { display: flex; flex-direction: column; gap: 5px; }
+.settings-small-field label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.settings-small-field input, .settings-small-field select {
+  font-family: var(--font-ui); font-size: 13px; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);
+}
+.settings-mini-select { font-size: 12px; border: 1px solid var(--border); border-radius: 3px; padding: 3px 6px; background: var(--bg); }
+
+/* ── Content editor ── */
+.group-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.group-tab { padding: 14px 24px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.group-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.content-editor-body { display: flex; flex: 1; overflow: hidden; }
+.text-list { width: 220px; border-right: 1px solid var(--border); background: var(--surface); padding: 16px; flex-shrink: 0; overflow-y: auto; }
+.text-list-title { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.text-list-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; background: var(--bg); }
+.text-list-item.active { background: var(--accent-light); border-color: var(--accent); }
+.text-list-item .title { font-size: 13px; font-weight: 500; color: var(--text); }
+.text-list-item.active .title { font-weight: 600; color: var(--accent); }
+.text-list-item .subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.content-editor-panel { flex: 1; padding: 24px; overflow-y: auto; background: var(--bg); }
+.content-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.content-editor-header .condition { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.content-editor-header .condition strong { color: var(--accent); }
+
+.editor-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
+.editor-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.editor-card-head-left { display: flex; align-items: center; gap: 10px; }
+.editor-card-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.editor-card-actions { display: flex; gap: 6px; }
+.editor-card-actions .btn { font-size: 12px; padding: 4px 10px; border: 1px solid var(--border); }
+.editor-card-actions .btn-delete { border: 1px solid #F0BBBB; color: var(--danger); }
+.editor-textarea {
+  width: 100%; min-height: 90px; font-family: var(--font-ui); font-size: 13px;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg); resize: vertical; color: var(--text); margin-bottom: 12px;
+}
+.editor-fields-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 12px; }
+.editor-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+.section-heading-row { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px; }
+.section-heading-row:first-child { margin-top: 0; }
+.section-heading-row h3 { font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* ── Password gate (settings + history) ── */
+.password-gate-overlay {
+  position: fixed; inset: 0; background: rgba(26,26,24,0.92);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.password-gate-card {
+  background: var(--surface); border-radius: var(--radius); padding: 40px 44px;
+  width: 360px; box-shadow: var(--shadow); text-align: center;
+}
+
+/* ── History page ── */
+.history-modal-overlay {
+  position: fixed; inset: 0; background: rgba(26,26,24,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 9998; padding: 32px;
+}
+.history-modal-card {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+  width: 100%; max-width: 720px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.history-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.history-modal-body { padding: 16px 20px; overflow: auto; }
+.history-modal-body pre { font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }

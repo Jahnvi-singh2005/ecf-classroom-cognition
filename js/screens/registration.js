@@ -1,0 +1,240 @@
+// screens/registration.js — Participant Registration (pre-experiment, mouse allowed).
+// Rebuild plan §6.1 / prototype screens 1 & 1b.
+
+import { getState, setState } from '../state.js';
+import { checkLSLConnection } from '../eeg.js';
+import { buildParticipantKey } from '../utils/buildParticipantKey.js';
+import { writeDraft, writeParticipant } from '../firebase.js';
+import { goToPhase } from '../main.js';
+
+const GROUPS = [1, 2, 3, 4];
+const SEX_OPTIONS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
+
+function randomGroup() {
+  return GROUPS[Math.floor(Math.random() * GROUPS.length)];
+}
+
+let containerRef = null;
+let currentGroup = randomGroup();
+let eegOn = false;
+
+function render() {
+  containerRef.innerHTML = `
+    <div class="topbar">
+      <span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span>
+      ${eegOn ? '<span class="topbar-badge">EEG Mode</span>' : ''}
+    </div>
+    <div id="lsl-banner-slot"></div>
+    <div class="center-wrap" style="align-items:flex-start;padding-top:40px;overflow-y:auto;">
+      <div class="form-card wide">
+        <span class="eyebrow">Session Setup</span>
+        <h1>Participant Registration</h1>
+        <p class="subtitle">Complete all required fields before beginning the session.</p>
+
+        <div class="field-section-label">Experiment Group</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Assigned Group <span>*</span></label>
+            <select id="field-group">
+              ${GROUPS.map((g) => `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>Group ${g}</option>`).join('')}
+            </select>
+            <span class="field-hint">Randomly preselected. Override if needed.</span>
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <label style="visibility:hidden">x</label>
+            <button type="button" id="btn-randomise" class="btn btn-ghost" style="border:1px solid var(--border);font-size:12px;padding:7px 14px;align-self:flex-start;margin-top:4px;">↺ Randomise</button>
+          </div>
+        </div>
+
+        <div class="field-section-label">Basic Information</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Full Name <span>*</span></label>
+            <input type="text" id="field-name" placeholder="Enter full name"/>
+            <span class="field-error" id="error-name"></span>
+          </div>
+          <div class="field">
+            <label>Age <span>*</span></label>
+            <input type="number" id="field-age" placeholder="e.g. 21"/>
+            <span class="field-error" id="error-age"></span>
+          </div>
+        </div>
+
+        <div class="field-section-label">Academic Profile</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Subject ID <span>*</span></label>
+            <input type="text" id="field-subject-id" placeholder="e.g. P001"/>
+            <span class="field-error" id="error-subject-id"></span>
+          </div>
+          <div class="field">
+            <label>Sex <span>*</span></label>
+            <select id="field-sex">
+              <option value="">Select</option>
+              ${SEX_OPTIONS.map((s) => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+            <span class="field-error" id="error-sex"></span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Year of Study <span>*</span></label>
+            <input type="text" id="field-year" placeholder="e.g. 3rd Year"/>
+            <span class="field-error" id="error-year"></span>
+          </div>
+          <div class="field">
+            <label>Discipline of Study <span>*</span></label>
+            <input type="text" id="field-discipline" placeholder="e.g. Computer Science"/>
+            <span class="field-error" id="error-discipline"></span>
+          </div>
+        </div>
+
+        <div class="field-section-label">Contact &amp; Notes</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Email <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+            <input type="email" id="field-email" placeholder="participant@example.com"/>
+            <span class="field-error" id="error-email"></span>
+          </div>
+          <div class="field">
+            <label>Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+            <input type="text" id="field-notes" placeholder="Any additional notes"/>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <strong>EEG Mode</strong>
+            <span>Enables baseline screen, fixation crosses, LSL markers, and EEG-optimised display</span>
+          </div>
+          <div class="toggle-switch ${eegOn ? 'on' : ''}" id="eeg-toggle" role="switch" aria-checked="${eegOn}" tabindex="0"></div>
+        </div>
+
+        <span class="field-error" id="error-form"></span>
+        <button type="button" id="btn-submit" class="btn btn-primary">Begin Session →</button>
+      </div>
+    </div>
+  `;
+
+  bindEvents();
+}
+
+function renderLslBanner(connected) {
+  const slot = containerRef?.querySelector('#lsl-banner-slot');
+  if (!slot) return;
+  slot.innerHTML = (eegOn && connected === false)
+    ? '<div class="banner"><div class="banner-dot"></div>LSL bridge not connected — markers disabled. Start the Python bridge before beginning an EEG session.</div>'
+    : '';
+}
+
+function bindEvents() {
+  containerRef.querySelector('#btn-randomise').addEventListener('click', () => {
+    currentGroup = randomGroup();
+    containerRef.querySelector('#field-group').value = String(currentGroup);
+  });
+
+  const toggleEl = containerRef.querySelector('#eeg-toggle');
+  const onToggle = async () => {
+    eegOn = !eegOn;
+    render();
+    if (eegOn) {
+      const connected = await checkLSLConnection();
+      renderLslBanner(connected);
+    }
+  };
+  toggleEl.addEventListener('click', onToggle);
+  toggleEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onToggle();
+    }
+  });
+
+  containerRef.querySelector('#btn-submit').addEventListener('click', handleSubmit);
+}
+
+function fieldValue(id) {
+  return containerRef.querySelector(`#${id}`).value.trim();
+}
+
+function setError(id, message) {
+  const el = containerRef.querySelector(`#error-${id}`);
+  if (el) el.textContent = message || '';
+}
+
+function validate() {
+  let valid = true;
+  const name = fieldValue('field-name');
+  const age = fieldValue('field-age');
+  const subjectId = fieldValue('field-subject-id');
+  const sex = fieldValue('field-sex');
+  const year = fieldValue('field-year');
+  const discipline = fieldValue('field-discipline');
+  const email = fieldValue('field-email');
+
+  ['name', 'age', 'subject-id', 'sex', 'year', 'discipline', 'email', 'form'].forEach((id) => setError(id, ''));
+
+  if (!name) { setError('name', 'Name is required'); valid = false; }
+  if (!age || Number.isNaN(Number(age)) || Number(age) < 1 || Number(age) > 120) {
+    setError('age', 'Please enter a valid age (1-120)'); valid = false;
+  }
+  if (!subjectId) { setError('subject-id', 'Subject ID is required'); valid = false; }
+  if (!sex) { setError('sex', 'Sex is required'); valid = false; }
+  if (!year) { setError('year', 'Year of study is required'); valid = false; }
+  if (!discipline) { setError('discipline', 'Discipline of study is required'); valid = false; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setError('email', 'Please enter a valid email address'); valid = false;
+  }
+
+  return valid;
+}
+
+function handleSubmit() {
+  if (!validate()) return;
+
+  const participant = {
+    name: fieldValue('field-name'),
+    age: Number(fieldValue('field-age')),
+    subjectId: fieldValue('field-subject-id'),
+    sex: fieldValue('field-sex'),
+    yearOfStudy: fieldValue('field-year'),
+    disciplineOfStudy: fieldValue('field-discipline'),
+  };
+  const email = fieldValue('field-email');
+  const notes = fieldValue('field-notes');
+  if (email) participant.email = email;
+  if (notes) participant.notes = notes;
+
+  const participantKey = buildParticipantKey(participant);
+  const sessionId = `${participantKey}_${Date.now()}`;
+
+  setState({
+    participant,
+    participantKey,
+    sessionId,
+    assignedGroup: currentGroup,
+    eegMode: eegOn,
+    sessionStartTime: Date.now(),
+  });
+
+  const snapshot = getState();
+  writeDraft(sessionId, snapshot).catch((error) => {
+    console.error('[registration] Failed to write initial draft.', error);
+  });
+  writeParticipant(participantKey, { participant }).catch((error) => {
+    console.error('[registration] Failed to write participant record.', error);
+  });
+
+  goToPhase('consent');
+}
+
+export function mount(container) {
+  containerRef = container;
+  currentGroup = randomGroup();
+  eegOn = false;
+  render();
+}
+
+export function unmount() {
+  containerRef = null;
+}

@@ -1,0 +1,20 @@
+/* tokens.css — CSS custom properties (colours, fonts, spacing). Values copied
+   verbatim from prototype_v2.html's :root block. Shared by main.css and admin.css. */
+:root {
+  --bg:           #F5F5F3;
+  --surface:      #FFFFFF;
+  --border:       #E0E0DC;
+  --text:         #1A1A18;
+  --muted:        #6B6B63;
+  --accent:       #2B4C7E;
+  --accent-light: #EBF0F8;
+  --amber:        #E8A838;
+  --amber-light:  #FDF3DC;
+  --success:      #2A7A4B;
+  --danger:       #B33A3A;
+  --font-ui:      'Space Grotesk', system-ui, sans-serif;
+  --font-read:    'Source Serif 4', Georgia, serif;
+  --radius:       8px;
+  --radius-sm:    5px;
+  --shadow:       0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.05);
+}
