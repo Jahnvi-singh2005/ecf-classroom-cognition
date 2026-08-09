@@ -8,7 +8,7 @@ import { writeDraft, writeParticipant } from '../firebase.js';
 import { goToPhase } from '../main.js';
 
 const GROUPS = [1, 2, 3, 4];
-const SEX_OPTIONS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
+const SEX_OPTIONS = ['Male', 'Female'];
 
 function randomGroup() {
   return GROUPS[Math.floor(Math.random() * GROUPS.length)];
