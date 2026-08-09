@@ -5,7 +5,7 @@
 // Correct MC answers are never revealed here (rebuild plan §6.10).
 
 import { getState, setState } from '../state.js';
-import { getCondition, getPraQuestions } from '../content.js';
+import { getPraQuestions } from '../content.js';
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
@@ -334,9 +334,8 @@ function advanceToNextQuestion() {
 export function mount(container) {
   containerRef = container;
 
-  const { currentTextIndex, currentPraIndex, assignedGroup, content } = getState();
-  const condition = getCondition(assignedGroup, currentTextIndex);
-  questions = getPraQuestions(condition, currentTextIndex);
+  const { currentTextIndex, currentPraIndex, content } = getState();
+  questions = getPraQuestions(currentTextIndex);
   questionIndex = currentPraIndex;
   question = questions[questionIndex];
 

@@ -20,17 +20,17 @@ export function getCondition(group, textIndex) {
   return content?.latinSquare?.[groupKey]?.[textKey] ?? getDefaultCondition(group, textIndex);
 }
 
-// Text metadata (id, title, groups) for the given zero-based text index.
+// Text metadata (id, title, praQuestions, conditions) for the given zero-based text index.
 export function getTextMeta(textIndex) {
   const { content } = getState();
   const textKey = `text${textIndex + 1}`;
   return content?.texts?.[textKey] ?? null;
 }
 
-// The condition-specific content block for a text: { slides, praQuestions }. Content
-// is authored once per (text, condition) pair — not per group. Which condition a
-// given group sees for a given text is decided separately, by getCondition() above
-// (the Latin square); this function just fetches that condition's actual content.
+// The condition-specific content block for a text: { slides }. Content is authored
+// once per (text, condition) pair — not per group. Which condition a given group
+// sees for a given text is decided separately, by getCondition() above (the Latin
+// square); this function just fetches that condition's actual slides.
 export function getConditionContent(condition, textIndex) {
   const textMeta = getTextMeta(textIndex);
   return textMeta?.conditions?.[condition] ?? null;
@@ -40,6 +40,8 @@ export function getTextSlides(condition, textIndex) {
   return getConditionContent(condition, textIndex)?.slides ?? [];
 }
 
-export function getPraQuestions(condition, textIndex) {
-  return getConditionContent(condition, textIndex)?.praQuestions ?? [];
+// PRA questions are shared across all four conditions for a text — stored once at
+// the text level (texts.text1.praQuestions), not per condition.
+export function getPraQuestions(textIndex) {
+  return getTextMeta(textIndex)?.praQuestions ?? [];
 }

@@ -3,7 +3,7 @@
 // Security. All saves go through firebase.js's saveContent()/changePassword().
 //
 // Content Editor is organised Text (top-level tab) → Condition (Passive/Active/
-// Constructive/Control, one section each) — content lives at content.texts[textId]
+// Constructive/Control, one sub-tab each) — content lives at content.texts[textId]
 // .conditions[condition], not per group. A 4×4 Latin square means every text has
 // exactly one content-set per condition, shared by whichever group the square
 // assigns that condition to for that text; there is nothing group-specific to author.
@@ -11,11 +11,12 @@
 // it only decides which condition a given group sees for a given text at runtime
 // (content.js's getCondition()), never where that condition's content is stored.
 //
-// PRA questions are edited exclusively via each condition section's "Assessment
-// questions" sub-section, matching build-spec's self-contained PRA question object
-// schema (§5.4) and how pra.js actually reads content (a dedicated praQuestions
-// array, never scanned out of `slides`). The slide-types table in build-spec §15 /
-// rebuild plan §8.1 also lists four "PRA — ..." entries as if they were addable
+// PRA questions are shared across all four conditions for a text, so they're stored
+// once per text (content.texts[textId].praQuestions) and edited once, above the
+// condition sub-tabs — not duplicated per condition. This matches build-spec's
+// self-contained PRA question object schema (§5.4) and how pra.js actually reads
+// content (one praQuestions array per text). The slide-types table in build-spec §15
+// / rebuild plan §8.1 also lists four "PRA — ..." entries as if they were addable
 // Slides-Editor types, but that would be dead data no runtime code reads — the
 // Slides Editor sub-section here only offers the 6 types that are genuinely part of
 // the `slides` array (pure-text/active-*/constructive-*/guided-resolution).
@@ -61,6 +62,7 @@ let workingConfig = null;
 let unlockedPassword = null;
 let activeTab = 'general';
 let activeTextIndex = 0;
+let activeConditionKey = 'passive';
 let lastInteractedSlideIndex = { passive: null, active: null, constructive: null, control: null };
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -83,11 +85,12 @@ function createDefaultText(id) {
   return {
     id,
     title: '',
+    praQuestions: [],
     conditions: {
-      passive: { slides: [], praQuestions: [] },
-      active: { slides: [], praQuestions: [] },
-      constructive: { slides: [], praQuestions: [] },
-      control: { slides: [], praQuestions: [] },
+      passive: { slides: [] },
+      active: { slides: [] },
+      constructive: { slides: [] },
+      control: { slides: [] },
     },
   };
 }
@@ -339,6 +342,7 @@ function renderContentTab(container) {
   container.querySelectorAll('.group-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       activeTextIndex = Number(tab.dataset.textIndex);
+      activeConditionKey = 'passive';
       lastInteractedSlideIndex = { passive: null, active: null, constructive: null, control: null };
       render();
     });
@@ -356,7 +360,23 @@ function renderEditorPanel(container) {
       <input type="text" id="text-title-input" value="${escapeAttr(text.title)}" placeholder="Text ${activeTextIndex + 1} title"
         style="font-size:16px;font-weight:600;color:var(--text);border:none;background:transparent;font-family:var(--font-ui);padding:0 0 4px;outline:none;border-bottom:1px dashed var(--border);width:100%;max-width:480px;"/>
     </div>
-    <div id="condition-sections"></div>
+
+    <div class="section-heading-row" style="margin-top:0;">
+      <h3>Assessment questions (objective + short-answer) — shared across all conditions</h3>
+      <button type="button" class="btn btn-secondary" id="btn-add-question" style="font-size:12px;padding:7px 16px;">+ Add question</button>
+    </div>
+    <div id="question-cards"></div>
+
+    <div class="condition-tabs">
+      ${CONDITIONS.map((c) => `<div class="condition-tab ${c === activeConditionKey ? 'active' : ''}" data-condition="${c}">${CONDITION_LABELS[c]}</div>`).join('')}
+    </div>
+
+    <div class="section-heading-row">
+      <h3>Slides editor — ${CONDITION_LABELS[activeConditionKey]}</h3>
+      <button type="button" class="btn btn-secondary" id="btn-add-slide" style="font-size:12px;padding:7px 16px;">+ Add slide</button>
+    </div>
+    <div id="slide-cards"></div>
+
     <div class="settings-actions">
       <button type="button" id="btn-save-slides" class="btn btn-primary" style="width:auto;margin-top:0;padding:10px 24px;">Save</button>
     </div>
@@ -366,52 +386,32 @@ function renderEditorPanel(container) {
     text.title = event.target.value;
   });
 
-  const sectionsEl = container.querySelector('#condition-sections');
-  sectionsEl.innerHTML = CONDITIONS.map((c) => `
-    <div class="condition-section">
-      <div class="condition-section-title">${CONDITION_LABELS[c]}</div>
+  renderQuestionCards(container.querySelector('#question-cards'), text);
+  renderSlideCards(container.querySelector('#slide-cards'), text.conditions[activeConditionKey], activeConditionKey);
 
-      <div class="section-heading-row" style="margin-top:0;">
-        <h3>Assessment questions (objective + short-answer)</h3>
-        <button type="button" class="btn btn-secondary btn-add-question" data-condition="${c}" style="font-size:12px;padding:7px 16px;">+ Add question</button>
-      </div>
-      <div class="question-cards" data-condition="${c}"></div>
-
-      <div class="section-heading-row">
-        <h3>Slides editor</h3>
-        <button type="button" class="btn btn-secondary btn-add-slide" data-condition="${c}" style="font-size:12px;padding:7px 16px;">+ Add slide</button>
-      </div>
-      <div class="slide-cards" data-condition="${c}"></div>
-    </div>
-  `).join('');
-
-  CONDITIONS.forEach((c) => {
-    const bucket = text.conditions[c];
-    renderQuestionCards(sectionsEl.querySelector(`.question-cards[data-condition="${c}"]`), bucket);
-    renderSlideCards(sectionsEl.querySelector(`.slide-cards[data-condition="${c}"]`), bucket, c);
-  });
-
-  sectionsEl.querySelectorAll('.btn-add-question').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      text.conditions[btn.dataset.condition].praQuestions.push(createDefaultQuestion());
+  container.querySelectorAll('.condition-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeConditionKey = tab.dataset.condition;
       render();
     });
   });
 
-  sectionsEl.querySelectorAll('.btn-add-slide').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const c = btn.dataset.condition;
-      openSlideTypePicker(text.conditions[c], c);
-    });
+  container.querySelector('#btn-add-question').addEventListener('click', () => {
+    text.praQuestions.push(createDefaultQuestion());
+    render();
+  });
+
+  container.querySelector('#btn-add-slide').addEventListener('click', () => {
+    openSlideTypePicker(text.conditions[activeConditionKey], activeConditionKey);
   });
 
   container.querySelector('#btn-save-slides').addEventListener('click', handleSaveConfig);
 }
 
-// ─── Section A: Assessment Questions (PRA) ─────────────────────────────────
+// ─── Assessment Questions (PRA) — shared per text, above the condition tabs ────
 
-function renderQuestionCards(container, group) {
-  const questions = group.praQuestions;
+function renderQuestionCards(container, text) {
+  const questions = text.praQuestions;
 
   if (questions.length === 0) {
     container.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:16px;">No assessment questions yet. Use "+ Add question" to create one.</p>';
@@ -478,13 +478,13 @@ function renderQuestionCards(container, group) {
     </div>
   `).join('');
 
-  bindQuestionCardEvents(container, group);
+  bindQuestionCardEvents(container, text);
 }
 
-function bindQuestionCardEvents(container, group) {
+function bindQuestionCardEvents(container, text) {
   container.querySelectorAll('[data-question-id]').forEach((card) => {
     const id = card.dataset.questionId;
-    const question = group.praQuestions.find((q) => q.id === id);
+    const question = text.praQuestions.find((q) => q.id === id);
 
     card.querySelectorAll('[data-q-field]').forEach((el) => {
       const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
@@ -522,12 +522,12 @@ function bindQuestionCardEvents(container, group) {
     card.querySelectorAll('[data-q-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.qAction;
-        const index = group.praQuestions.findIndex((q) => q.id === id);
-        if (action === 'delete') group.praQuestions.splice(index, 1);
+        const index = text.praQuestions.findIndex((q) => q.id === id);
+        if (action === 'delete') text.praQuestions.splice(index, 1);
         else if (action === 'up' && index > 0) {
-          [group.praQuestions[index - 1], group.praQuestions[index]] = [group.praQuestions[index], group.praQuestions[index - 1]];
-        } else if (action === 'down' && index < group.praQuestions.length - 1) {
-          [group.praQuestions[index + 1], group.praQuestions[index]] = [group.praQuestions[index], group.praQuestions[index + 1]];
+          [text.praQuestions[index - 1], text.praQuestions[index]] = [text.praQuestions[index], text.praQuestions[index - 1]];
+        } else if (action === 'down' && index < text.praQuestions.length - 1) {
+          [text.praQuestions[index + 1], text.praQuestions[index]] = [text.praQuestions[index], text.praQuestions[index + 1]];
         }
         render();
       });
@@ -537,8 +537,8 @@ function bindQuestionCardEvents(container, group) {
 
 // ─── Section B: Slides Editor ───────────────────────────────────────────────
 
-function renderSlideCards(container, group, conditionKey) {
-  const slides = group.slides;
+function renderSlideCards(container, bucket, conditionKey) {
+  const slides = bucket.slides;
 
   if (slides.length === 0) {
     container.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:16px;">No slides yet. Use "+ Add slide" to create one.</p>';
@@ -591,16 +591,16 @@ function renderSlideCards(container, group, conditionKey) {
     `;
   }).join('');
 
-  bindSlideCardEvents(container, group, conditionKey);
+  bindSlideCardEvents(container, bucket, conditionKey);
 }
 
-function bindSlideCardEvents(container, group, conditionKey) {
+function bindSlideCardEvents(container, bucket, conditionKey) {
   container.querySelectorAll('[data-slide-id]').forEach((card) => {
     const id = card.dataset.slideId;
-    const slide = group.slides.find((s) => s.id === id);
+    const slide = bucket.slides.find((s) => s.id === id);
 
     card.addEventListener('click', () => {
-      lastInteractedSlideIndex[conditionKey] = group.slides.findIndex((s) => s.id === id);
+      lastInteractedSlideIndex[conditionKey] = bucket.slides.findIndex((s) => s.id === id);
     });
 
     card.querySelectorAll('[data-s-field="content"]').forEach((el) => {
@@ -635,23 +635,23 @@ function bindSlideCardEvents(container, group, conditionKey) {
     card.querySelectorAll('[data-s-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.sAction;
-        const index = group.slides.findIndex((s) => s.id === id);
-        if (action === 'delete') group.slides.splice(index, 1);
+        const index = bucket.slides.findIndex((s) => s.id === id);
+        if (action === 'delete') bucket.slides.splice(index, 1);
         else if (action === 'up' && index > 0) {
-          [group.slides[index - 1], group.slides[index]] = [group.slides[index], group.slides[index - 1]];
-        } else if (action === 'down' && index < group.slides.length - 1) {
-          [group.slides[index + 1], group.slides[index]] = [group.slides[index], group.slides[index + 1]];
+          [bucket.slides[index - 1], bucket.slides[index]] = [bucket.slides[index], bucket.slides[index - 1]];
+        } else if (action === 'down' && index < bucket.slides.length - 1) {
+          [bucket.slides[index + 1], bucket.slides[index]] = [bucket.slides[index], bucket.slides[index + 1]];
         }
-        lastInteractedSlideIndex[conditionKey] = Math.max(0, Math.min(index, group.slides.length - 1));
+        lastInteractedSlideIndex[conditionKey] = Math.max(0, Math.min(index, bucket.slides.length - 1));
         render();
       });
     });
   });
 }
 
-function openSlideTypePicker(group, conditionKey) {
+function openSlideTypePicker(bucket, conditionKey) {
   const lastIndex = lastInteractedSlideIndex[conditionKey];
-  const insertAt = (lastIndex === null ? group.slides.length - 1 : lastIndex) + 1;
+  const insertAt = (lastIndex === null ? bucket.slides.length - 1 : lastIndex) + 1;
 
   const picker = document.createElement('div');
   picker.className = 'editor-card';
@@ -668,12 +668,12 @@ function openSlideTypePicker(group, conditionKey) {
     </div>
   `;
 
-  const slideCardsEl = appEl.querySelector(`.slide-cards[data-condition="${conditionKey}"]`);
+  const slideCardsEl = appEl.querySelector('#slide-cards');
   slideCardsEl.prepend(picker);
 
   picker.querySelector('#slide-type-picker-confirm').addEventListener('click', () => {
     const type = picker.querySelector('#slide-type-picker-select').value;
-    group.slides.splice(insertAt, 0, createDefaultSlide(type));
+    bucket.slides.splice(insertAt, 0, createDefaultSlide(type));
     lastInteractedSlideIndex[conditionKey] = insertAt;
     render();
   });
