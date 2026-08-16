@@ -49,14 +49,24 @@ The full marker scheme, WebSocket transport, and Python bridge implementation ar
 
 ## 8) Deploying to Vercel
 
-No `vercel.json` needed — this is a multi-page site of separate HTML files, and Vercel serves each at its natural path. In the Vercel dashboard when connecting the repo:
+`vercel.json` sets the build command to `node scripts/generateConfig.js`, which reads the environment variables below and writes `js/config.js` at build time (that file stays gitignored — it's generated fresh on every deploy, never committed). In the Vercel dashboard when connecting the repo:
 
 - **Framework preset:** Other
-- **Build command:** *(empty)*
+- **Build command:** *(from `vercel.json`, no change needed)*
 - **Output directory:** `.`
 - **Install command:** *(empty)*
 
-**Open item — `js/config.js` on the deployed site:** `js/config.js` is gitignored by design (§4.1 of the build spec), so it is never part of what gets pushed to Vercel. That means a deploy driven purely by `git push` will **not** have Firebase credentials available at runtime, and the live site will silently run in local-only mode for every participant. Neither `ecf-build-spec.md` nor `ecf-rebuild-plan-v2-2.md` describes how `js/config.js` is supposed to reach the deployed instance — Vercel environment variables were explicitly ruled out (`js/config.js` is loaded as a static `<script>` tag, not read from `process.env` at build time, and there is no build step to inject one into the other). Until this is resolved, treat any Vercel deployment as **local-only unless `js/config.js` is added to the deployed output through some channel outside the normal git-based deploy** (e.g. Vercel's dashboard file overrides, or a separate non-git upload step) — confirm the intended mechanism with the researcher before relying on a deployed instance to write real session data to Firestore.
+Before deploying, set these 7 environment variables in the Vercel dashboard (**Project Settings → Environment Variables**):
+
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+- `SETTINGS_PASSWORD`
+
+If any of these are missing at build time, `js/config.js` is still generated but with blank values for the missing keys, and the deployed site falls back to local-only mode (session data written to `localStorage` instead of Firestore) — check the build log for a warning listing which keys were missing.
 
 ## 9) Firestore security
 
