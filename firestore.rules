@@ -3,8 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /projectMeta/{doc} {
       allow read: if true;
-      // Access to the admin panel (which is the only client that ever writes here)
-      // is enforced by the password gate in the app itself, not by Firestore rules.
       allow write: if true;
     }
     match /experimentSessions/{sessionId} {
