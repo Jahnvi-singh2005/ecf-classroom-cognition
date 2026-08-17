@@ -1,24 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /projectMeta/{doc} {
-      allow read: if true;
-      allow write: if true;
-    }
-    match /experimentSessions/{sessionId} {
-      allow create: if true;
-      allow read, update, delete: if false;
-    }
-    match /experimentSessionDrafts/{sessionId} {
+    match /{document=**} {
       allow read, write: if true;
-    }
-    match /participants/{participantKey} {
-      allow write: if true;
-      allow read: if false;
-    }
-    match /participants/{participantKey}/sessions/{sessionId} {
-      allow write: if true;
-      allow read: if false;
     }
   }
 }
