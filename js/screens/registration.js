@@ -133,6 +133,10 @@ function bindEvents() {
     containerRef.querySelector('#field-group').value = String(currentGroup);
   });
 
+  containerRef.querySelector('#field-group').addEventListener('change', (event) => {
+    currentGroup = Number(event.target.value);
+  });
+
   const toggleEl = containerRef.querySelector('#eeg-toggle');
   const onToggle = async () => {
     eegOn = !eegOn;
