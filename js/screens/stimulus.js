@@ -218,12 +218,14 @@ function renderContentSlide() {
   minTimeMs = slide.timing?.minMs ?? globalDefaults?.minMs;
   maxTimeMs = slide.timing?.maxMs ?? globalDefaults?.maxMs;
 
+  // Spacebar must work regardless of whether auto-advance timing is configured —
+  // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
+  registerHandler('space', handleSpacebar);
+
   if (!maxTimeMs) {
     console.error('[stimulus] No duration configured for this slide (per-slide timing.maxMs or globalTimingDefaults.pureText.maxMs) — cannot auto-advance.');
     return;
   }
-
-  registerHandler('space', handleSpacebar);
 
   cancelTimer = startTimer({
     onTick: (elapsed) => { elapsedMs = elapsed; },
