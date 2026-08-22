@@ -63,6 +63,13 @@ function computeSectionNumber(slides, index) {
   return count + 1;
 }
 
+// Position of the slide at `index` among pure-text slides only, e.g. "Slide 3 of 7".
+function computePureTextPosition(slides, index) {
+  const pureTextSlides = slides.filter((s) => s.type === 'pure-text');
+  const current = slides.slice(0, index + 1).filter((s) => s.type === 'pure-text').length;
+  return { current, total: pureTextSlides.length };
+}
+
 function handleSpacebar() {
   if (elapsedMs < minTimeMs) return;
   advance('spacebar');
@@ -136,9 +143,16 @@ export function mount(container) {
 
   const showSectionLabel = condition === 'active' || condition === 'constructive';
   const sectionNumber = showSectionLabel ? computeSectionNumber(slides, currentSlideIndex) : null;
+  const { current: slideNumber, total: slideTotal } = computePureTextPosition(slides, currentSlideIndex);
 
   containerRef.innerHTML = `
-    <div class="topbar"><span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span></div>
+    <div class="topbar">
+      <span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span>
+      <div class="topbar-meta">
+        <span class="topbar-text-title">${textMeta?.title || ''}</span>
+        <span class="topbar-badge">Slide ${slideNumber} of ${slideTotal}</span>
+      </div>
+    </div>
     <div class="reading-layout">
       <div class="reading-body">
         <div class="passage-card">
