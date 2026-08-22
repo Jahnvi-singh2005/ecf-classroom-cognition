@@ -70,6 +70,15 @@ function computePureTextPosition(slides, index) {
   return { current, total: pureTextSlides.length };
 }
 
+// The `title` field already reads "Title - Author"/"Title – Author" (e.g. "The Market
+// for Lemons - GA Akerlof") — split it for the title card rather than adding a
+// separate author field to the text object.
+function parseTitleAndAuthor(rawTitle) {
+  const match = /^(.*?)\s[-–—]\s(.+)$/.exec(rawTitle || '');
+  if (!match) return { title: rawTitle || '', author: '' };
+  return { title: match[1], author: match[2] };
+}
+
 function handleSpacebar() {
   if (elapsedMs < minTimeMs) return;
   advance('spacebar');
@@ -122,11 +131,49 @@ function routeToNextSlide(slides, currentIndex) {
   }
 }
 
+// Shown once, before the first pure-text slide of each text — not counted in the
+// "Slide N of Total" numbering, which only tracks the underlying slides array.
+function renderTitleSlide(textMeta) {
+  const { title, author } = parseTitleAndAuthor(textMeta?.title);
+
+  containerRef.innerHTML = `
+    <div class="topbar"><span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span></div>
+    <div class="reading-layout">
+      <div class="reading-body title-slide-body">
+        <div class="title-slide-card">
+          <h1 class="title-slide-heading">${title}</h1>
+          ${author ? `<p class="title-slide-author">${author}</p>` : ''}
+        </div>
+      </div>
+      <div class="reading-footer">
+        <div class="kbd-hint"><kbd class="kbd">Spacebar</kbd> to begin</div>
+      </div>
+    </div>
+  `;
+
+  registerHandler('space', dismissTitleSlide);
+}
+
+function dismissTitleSlide() {
+  unregisterHandler('space');
+  renderContentSlide();
+}
+
 export function mount(container) {
   containerRef = container;
   hasAdvanced = false;
   elapsedMs = 0;
 
+  const { currentSlideIndex } = getState();
+  if (currentSlideIndex === 0) {
+    renderTitleSlide(getTextMeta(getState().currentTextIndex));
+    return;
+  }
+
+  renderContentSlide();
+}
+
+function renderContentSlide() {
   const { currentTextIndex, currentSlideIndex, assignedGroup, content } = getState();
   const condition = getCondition(assignedGroup, currentTextIndex);
   const conditionContent = getConditionContent(condition, currentTextIndex);
@@ -144,12 +191,13 @@ export function mount(container) {
   const showSectionLabel = condition === 'active' || condition === 'constructive';
   const sectionNumber = showSectionLabel ? computeSectionNumber(slides, currentSlideIndex) : null;
   const { current: slideNumber, total: slideTotal } = computePureTextPosition(slides, currentSlideIndex);
+  const { title: headerTitle } = parseTitleAndAuthor(textMeta?.title);
 
   containerRef.innerHTML = `
     <div class="topbar">
       <span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span>
       <div class="topbar-meta">
-        <span class="topbar-text-title">${textMeta?.title || ''}</span>
+        <span class="topbar-text-title">${headerTitle}</span>
         <span class="topbar-badge">Slide ${slideNumber} of ${slideTotal}</span>
       </div>
     </div>

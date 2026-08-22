@@ -3,7 +3,7 @@
 // This is the last mouse-clickable element for the participant until the break screen(s).
 
 import { getState, setState } from '../state.js';
-import { initEEGMode } from '../eeg.js';
+import { initEEGMode, requestFullScreen } from '../eeg.js';
 import { goToPhase } from '../main.js';
 
 let containerRef = null;
@@ -58,9 +58,11 @@ function handleBegin() {
   const { eegMode } = getState();
   setState({ currentTextIndex: 0, currentSlideIndex: 0 });
 
+  // Must run synchronously inside this click handler — browsers only honour
+  // requestFullscreen() when called directly from a user gesture.
+  requestFullScreen();
+
   if (eegMode) {
-    // Must run synchronously inside this click handler — browsers only honour
-    // requestFullscreen() when called directly from a user gesture.
     initEEGMode();
     goToPhase('baseline');
   } else {

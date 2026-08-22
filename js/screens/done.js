@@ -3,6 +3,7 @@
 
 import { getState, setState } from '../state.js';
 import { writeSession, writeParticipant, writeParticipantSession, completeDraft } from '../firebase.js';
+import { exitFullScreen } from '../eeg.js';
 
 let containerRef = null;
 
@@ -53,6 +54,7 @@ function buildSessionPayload() {
 export async function mount(container) {
   containerRef = container;
   render();
+  exitFullScreen();
 
   const { sessionId, participantKey } = getState();
   const payload = buildSessionPayload();

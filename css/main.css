@@ -208,6 +208,10 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; m
 .passage-text { font-family: var(--font-read); font-size: 17px; line-height: 1.9; color: var(--text); }
 .passage-text p + p { margin-top: 1.2em; }
 .section-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: block; }
+.title-slide-body { align-items: center; }
+.title-slide-card { max-width: 640px; text-align: center; }
+.title-slide-heading { font-family: var(--font-read); font-size: 32px; font-weight: 600; line-height: 1.3; color: var(--text); }
+.title-slide-author { font-family: var(--font-ui); font-size: 15px; color: var(--muted); margin-top: 14px; }
 .reading-footer {
   height: 56px; background: var(--surface); border-top: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;

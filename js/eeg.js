@@ -39,7 +39,7 @@ function showBlockingOverlay(reason) {
   `;
 
   overlayEl.querySelector('.eeg-blocking-btn').addEventListener('click', () => {
-    document.documentElement.requestFullscreen().catch(() => undefined);
+    requestFullScreen();
   });
 
   document.body.appendChild(overlayEl);
@@ -62,8 +62,20 @@ function hideBlockingOverlay() {
   }
 }
 
-function enforceFullScreen() {
+// Requested unconditionally on experiment start (see instructions.js), and again
+// here for EEG mode's fullscreen-exit enforcement below.
+export function requestFullScreen() {
   document.documentElement.requestFullscreen().catch(() => undefined);
+}
+
+export function exitFullScreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => undefined);
+  }
+}
+
+function enforceFullScreen() {
+  requestFullScreen();
   document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
       showBlockingOverlay('full-screen');
