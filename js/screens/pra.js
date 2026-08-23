@@ -10,6 +10,7 @@ import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { countWords, isWithinRange } from '../utils/wordCount.js';
+import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
@@ -91,6 +92,13 @@ function renderThinking() {
 function startThinkingTimer(content) {
   const defaults = content?.globalTimingDefaults?.questionProbe;
   const maxMs = question.timing?.thinkingMaxMs ?? defaults?.maxMs;
+
+  // Testing mode: no auto-advance timer at all — thinking phase otherwise has no
+  // manual escape, so Spacebar becomes the only way forward.
+  if (isTestingMode()) {
+    registerHandler('space', enterResponsePhase);
+    return;
+  }
 
   if (!maxMs) {
     console.error('[pra] No thinking-phase duration configured (question timing.thinkingMaxMs or globalTimingDefaults.questionProbe.maxMs).');
@@ -212,6 +220,7 @@ function handleWrittenInput(event) {
 
 function enterResponsePhase() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  unregisterHandler('space'); // clears the testing-mode thinking-phase skip, if any
   t2ResponsePhaseStart = Date.now();
 
   const { content } = getState();
@@ -232,6 +241,10 @@ function enterResponsePhase() {
     registerHandler('arrow-down', handleArrowDown);
   }
   registerHandler('ctrl+enter', handleSubmit);
+
+  // Testing mode: no forced auto-submit — Ctrl+Enter (already registered above,
+  // still gated by word-count enforcement) is the only way to submit.
+  if (isTestingMode()) return;
 
   if (!maxMs) {
     console.error('[pra] No response-phase duration configured.');
@@ -366,6 +379,7 @@ export function mount(container) {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  unregisterHandler('space');
   unregisterHandler('ctrl+enter');
   unregisterHandler('arrow-up');
   unregisterHandler('arrow-down');
