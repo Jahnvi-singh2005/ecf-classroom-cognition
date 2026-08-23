@@ -8,6 +8,7 @@ import { getCondition, getTextSlides } from '../content.js';
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
+import { canProgress } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
@@ -29,7 +30,7 @@ function computeSectionNumber(slides, index) {
 }
 
 function handleSpacebar() {
-  if (elapsedMs < minTimeMs) return;
+  if (!canProgress(elapsedMs, minTimeMs)) return;
   advance();
 }
 

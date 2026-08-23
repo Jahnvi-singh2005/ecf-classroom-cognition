@@ -14,6 +14,7 @@ import { getCondition, getConditionContent, getTextMeta, getTextSlides } from '.
 import { startTimer } from '../timer.js';
 import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
+import { canProgress } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 let containerRef = null;
@@ -80,7 +81,7 @@ function parseTitleAndAuthor(rawTitle) {
 }
 
 function handleSpacebar() {
-  if (elapsedMs < minTimeMs) return;
+  if (!canProgress(elapsedMs, minTimeMs)) return;
   advance('spacebar');
 }
 

@@ -4,7 +4,8 @@
 import { getState, setState } from '../state.js';
 import { checkLSLConnection } from '../eeg.js';
 import { buildParticipantKey } from '../utils/buildParticipantKey.js';
-import { writeDraft, writeParticipant } from '../firebase.js';
+import { writeDraft, writeParticipant, validatePassword } from '../firebase.js';
+import { isTestingMode, setTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const GROUPS = [1, 2, 3, 4];
@@ -110,6 +111,14 @@ function render() {
           <div class="toggle-switch ${eegOn ? 'on' : ''}" id="eeg-toggle" role="switch" aria-checked="${eegOn}" tabindex="0"></div>
         </div>
 
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <strong>Testing Mode</strong>
+            <span>Bypasses all slide timers for development/testing. Password protected — do not leave on for a real session.</span>
+          </div>
+          <div class="toggle-switch ${isTestingMode() ? 'on' : ''}" id="testing-toggle" role="switch" aria-checked="${isTestingMode()}" tabindex="0"></div>
+        </div>
+
         <span class="field-error" id="error-form"></span>
         <button type="button" id="btn-submit" class="btn btn-primary">Begin Session →</button>
       </div>
@@ -154,7 +163,36 @@ function bindEvents() {
     }
   });
 
+  const testingToggleEl = containerRef.querySelector('#testing-toggle');
+  testingToggleEl.addEventListener('click', handleTestingModeToggle);
+  testingToggleEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleTestingModeToggle();
+    }
+  });
+
   containerRef.querySelector('#btn-submit').addEventListener('click', handleSubmit);
+}
+
+async function handleTestingModeToggle() {
+  if (isTestingMode()) {
+    setTestingMode(false);
+    render();
+    return;
+  }
+
+  const password = window.prompt('Enter the settings password to enable Testing Mode:');
+  if (password === null) return;
+
+  const valid = await validatePassword(password);
+  if (!valid) {
+    window.alert('Incorrect password.');
+    return;
+  }
+
+  setTestingMode(true);
+  render();
 }
 
 function fieldValue(id) {

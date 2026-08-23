@@ -45,6 +45,18 @@ body.eeg-mode .reading-footer { background: #D8D8D4; border-color: #C4C4C0; }
 .topbar-meta { display: flex; align-items: center; gap: 14px; }
 .topbar-text-title { font-size: 13px; font-weight: 500; color: var(--text); }
 
+/* ── TESTING MODE BADGE ── */
+/* Fixed to <body>, not #app, so it survives every screen's innerHTML rebuild. */
+#testing-mode-badge {
+  position: fixed; top: 10px; right: 10px; z-index: 9999;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; background: var(--danger);
+  border-radius: 4px; padding: 6px 12px;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+
 /* ── BANNER ── */
 .banner {
   background: #FDF3DC; border-bottom: 1px solid #F0D898;
