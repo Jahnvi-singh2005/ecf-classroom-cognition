@@ -54,16 +54,6 @@ function appendReadingMarker(marker) {
   setState({ texts: updated });
 }
 
-// Section N = 1 + how many guided-resolution slides (section terminators) precede
-// this index in the mixed slide array.
-function computeSectionNumber(slides, index) {
-  let count = 0;
-  for (let i = 0; i < index; i += 1) {
-    if (slides[i].type === 'guided-resolution') count += 1;
-  }
-  return count + 1;
-}
-
 // Position of the slide at `index` among pure-text slides only, e.g. "Slide 3 of 7".
 function computePureTextPosition(slides, index) {
   const pureTextSlides = slides.filter((s) => s.type === 'pure-text');
@@ -189,8 +179,6 @@ function renderContentSlide() {
 
   ensureTextEntry(condition, `text${currentTextIndex + 1}`, textMeta?.title || '');
 
-  const showSectionLabel = condition === 'active' || condition === 'constructive';
-  const sectionNumber = showSectionLabel ? computeSectionNumber(slides, currentSlideIndex) : null;
   const { current: slideNumber, total: slideTotal } = computePureTextPosition(slides, currentSlideIndex);
   const { title: headerTitle } = parseTitleAndAuthor(textMeta?.title);
 
@@ -205,7 +193,6 @@ function renderContentSlide() {
     <div class="reading-layout">
       <div class="reading-body">
         <div class="passage-card">
-          ${showSectionLabel ? `<span class="section-label">Section ${sectionNumber} of 4</span>` : ''}
           <div class="passage-text">${renderMarkdown(slide.content || '')}</div>
         </div>
       </div>
