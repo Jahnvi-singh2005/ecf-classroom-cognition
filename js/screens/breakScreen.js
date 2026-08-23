@@ -1,7 +1,7 @@
 // screens/breakScreen.js — Break Screen. Build-spec §11.11 / rebuild plan §6.11.
-// Shown after each PRA except the last (pra.js already routes straight to 'done'
-// after text 4, so this module is only ever mounted when there IS a next text).
-// The only post-experiment mouse-clickable button in the whole app.
+// Shown after each text's post-text feedback screen, except the last (postTextFeedback.js
+// already routes straight to 'done' after text 4, so this module is only ever mounted
+// when there IS a next text). The only post-experiment mouse-clickable button in the app.
 
 import { getState, setState } from '../state.js';
 import { goToPhase } from '../main.js';

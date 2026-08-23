@@ -46,6 +46,7 @@ function buildSessionPayload() {
     selfReport: state.selfReport,
     consent: state.consent,
     texts: state.texts,
+    postTextFeedback: state.postTextFeedback,
     visibilityEvents: state.visibilityEvents,
     eventLog: state.eventLog,
   };

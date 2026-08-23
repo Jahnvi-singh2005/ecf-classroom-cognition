@@ -326,11 +326,7 @@ function advanceToNextQuestion() {
     finalizeText();
     setState({ currentPraIndex: 0 });
 
-    // Break screen is skipped after the final text (rebuild plan §6.11).
-    const { currentTextIndex, content } = getState();
-    const totalTexts = Object.keys(content?.texts || {}).length;
-    const isLastText = currentTextIndex >= totalTexts - 1;
-    goToPhase(isLastText ? 'done' : 'breakScreen');
+    goToPhase('postTextFeedback');
     return;
   }
 

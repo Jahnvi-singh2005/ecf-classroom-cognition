@@ -18,6 +18,7 @@ function createInitialState() {
     selfReport: null,        // written after the Learner Self-Report screen
     consent: null,           // written after the Consent screen
     texts: [],               // session text results being built up
+    postTextFeedback: {},    // keyed by textIndex — written after each text's PRA
     eventLog: [],
     visibilityEvents: [],
     draftTimer: null,        // reference to auto-save interval

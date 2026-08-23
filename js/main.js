@@ -18,6 +18,7 @@ import * as stimulus from './screens/stimulus.js';
 import * as embeddedTask from './screens/embeddedTask.js';
 import * as guidedResolution from './screens/guidedResolution.js';
 import * as pra from './screens/pra.js';
+import * as postTextFeedback from './screens/postTextFeedback.js';
 import * as breakScreen from './screens/breakScreen.js';
 import * as done from './screens/done.js';
 
@@ -32,6 +33,7 @@ const SCREENS = {
   embeddedTask,
   guidedResolution,
   pra,
+  postTextFeedback,
   breakScreen,
   done,
 };
@@ -98,6 +100,7 @@ function resumeFromDraft(draft, content) {
     currentSlideIndex: draft.currentSlideIndex || 0,
     currentPraIndex: draft.currentPraIndex || 0,
     texts: draft.texts || [],
+    postTextFeedback: draft.postTextFeedback || {},
     eventLog: draft.eventLog || [],
     visibilityEvents: draft.visibilityEvents || [],
   });
