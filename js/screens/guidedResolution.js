@@ -130,12 +130,14 @@ export function mount(container) {
   minTimeMs = resolutionSlide.timing?.minMs ?? defaults?.minMs;
   maxTimeMs = resolutionSlide.timing?.maxMs ?? defaults?.maxMs;
 
+  // Spacebar must work regardless of whether auto-advance timing is configured —
+  // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
+  registerHandler('space', handleSpacebar);
+
   if (!maxTimeMs) {
     console.error('[guidedResolution] No duration configured (slide timing.maxMs or globalTimingDefaults.guidedResolution.maxMs) — cannot auto-advance.');
     return;
   }
-
-  registerHandler('space', handleSpacebar);
 
   // MARKER STUB [phase 2]: guided resolution onset
   // sendMarker(MARKERS.GUIDED_RESOLUTION_START);
