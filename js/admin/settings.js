@@ -64,6 +64,9 @@ let activeTab = 'general';
 let activeTextIndex = 0;
 let activeConditionKey = 'passive';
 let lastInteractedSlideIndex = { passive: null, active: null, constructive: null, control: null };
+let autoSaveTimer = null;
+
+const AUTO_SAVE_DEBOUNCE_MS = 2000;
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -301,15 +304,57 @@ function renderGeneralTab(container) {
   container.querySelector('#btn-reset-defaults').addEventListener('click', handleResetDefaults);
 }
 
-async function handleSaveConfig() {
+async function persistConfig() {
   workingConfig.updatedAt = Date.now();
   workingConfig.version = (workingConfig.version || 0) + 1;
+  await saveContent(workingConfig, unlockedPassword);
+}
+
+async function handleSaveConfig() {
   try {
-    await saveContent(workingConfig, unlockedPassword);
+    await persistConfig();
     window.alert('Saved.');
   } catch (error) {
     window.alert(`Could not save: ${error.message || error}`);
   }
+}
+
+// ─── Content Editor auto-save ──────────────────────────────────────────────
+// Slide/question/title edits debounce-save 2s after the user stops typing —
+// no separate "Save" button for the Content Editor (see #save-status below).
+
+function setSaveStatus(text, isError) {
+  const el = appEl.querySelector('#save-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+}
+
+function scheduleAutoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  setSaveStatus('Unsaved changes…');
+  autoSaveTimer = setTimeout(async () => {
+    autoSaveTimer = null;
+    try {
+      await persistConfig();
+      setSaveStatus('All changes saved');
+    } catch (error) {
+      setSaveStatus(`Could not save: ${error.message || error}`, true);
+    }
+  }, AUTO_SAVE_DEBOUNCE_MS);
+}
+
+// Delegated on `appEl` (never replaced wholesale, unlike its children) so this
+// is wired once and keeps working across every render() rebuild of the tabs.
+function handleContentEditorInput(event) {
+  if (event.target.closest('#content-editor-panel')) scheduleAutoSave();
+}
+
+function handleContentEditorClick(event) {
+  const actionEl = event.target.closest(
+    '[data-q-action], [data-s-action], #btn-add-question, #btn-add-slide, #slide-type-picker-confirm',
+  );
+  if (actionEl && actionEl.closest('#content-editor-panel')) scheduleAutoSave();
 }
 
 function handleResetDefaults() {
@@ -378,7 +423,7 @@ function renderEditorPanel(container) {
     <div id="slide-cards"></div>
 
     <div class="settings-actions">
-      <button type="button" id="btn-save-slides" class="btn btn-primary" style="width:auto;margin-top:0;padding:10px 24px;">Save</button>
+      <span id="save-status" style="font-size:12px;color:var(--muted);">All changes saved</span>
     </div>
   `;
 
@@ -404,8 +449,6 @@ function renderEditorPanel(container) {
   container.querySelector('#btn-add-slide').addEventListener('click', () => {
     openSlideTypePicker(text.conditions[activeConditionKey], activeConditionKey);
   });
-
-  container.querySelector('#btn-save-slides').addEventListener('click', handleSaveConfig);
 }
 
 // ─── Assessment Questions (PRA) — shared per text, above the condition tabs ────
@@ -730,6 +773,10 @@ async function initAdminApp() {
 
   const loaded = await loadContent();
   workingConfig = loaded ? deepClone(loaded) : createDefaultConfig();
+
+  appEl.addEventListener('input', handleContentEditorInput);
+  appEl.addEventListener('change', handleContentEditorInput);
+  appEl.addEventListener('click', handleContentEditorClick);
 
   renderPasswordGate();
 }
