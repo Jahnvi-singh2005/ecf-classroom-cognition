@@ -77,7 +77,6 @@ function renderThinking() {
     </div>
     <div class="task-body">
       <div class="task-card">
-        ${isWritten ? `<span class="eyebrow">${question.wordLimits?.min ?? 0} – ${question.wordLimits?.max ?? 0} words required</span>` : ''}
         <div class="task-question">${renderMarkdown(question.prompt || '')}</div>
         <div style="font-size:13px;color:var(--muted);font-style:italic;">${
           isWritten
@@ -173,7 +172,6 @@ function renderResponseWritten() {
     ${renderHeader()}
     <div class="task-body" style="padding-top:32px;">
       <div class="task-card">
-        <span class="eyebrow">${minWords} – ${maxWords} words required</span>
         <div class="task-question">${renderMarkdown(question.prompt || '')}</div>
         <div class="word-count-row">
           <span class="word-count-label">Word count</span>
