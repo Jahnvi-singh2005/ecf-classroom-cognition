@@ -7,6 +7,7 @@ import { initFirebase, writeDraft, checkIncompleteDraft } from './firebase.js';
 import { loadContentIntoState } from './content.js';
 import { initKeyboard } from './keyboard.js';
 import { initEEGMode } from './eeg.js';
+import { showExitSessionButton, hideExitSessionButton } from './exitSession.js';
 
 import * as registration from './screens/registration.js';
 import * as consent from './screens/consent.js';
@@ -58,6 +59,15 @@ export function goToPhase(phaseName) {
   setState({ phase: phaseName });
   currentScreen = screenModule;
   currentScreen.mount(appContainer);
+
+  // Exit Session is available for the whole experiment — from registration
+  // submit (when a session first exists) through to the final PRA/feedback.
+  // Hidden before a session exists and after it's already complete.
+  if (phaseName === 'registration' || phaseName === 'done') {
+    hideExitSessionButton();
+  } else {
+    showExitSessionButton();
+  }
 
   if (phaseName === 'done') {
     stopAutosave();
