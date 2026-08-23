@@ -35,10 +35,8 @@ export function mount(container) {
   // MARKER STUB [phase 2]: fixation onset
   // sendMarker(MARKERS.FIXATION_ONSET);
 
-  if (!durationMs) {
-    console.error('[fixation] No duration configured at globalTimingDefaults.fixationCross.durationMs — cannot auto-advance.');
-    return;
-  }
+  // Missing timing config means no auto-advance.
+  if (!durationMs) return;
 
   cancelTimer = startTimer({
     onTick: () => {},

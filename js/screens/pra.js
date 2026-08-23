@@ -100,10 +100,8 @@ function startThinkingTimer(content) {
     return;
   }
 
-  if (!maxMs) {
-    console.error('[pra] No thinking-phase duration configured (question timing.thinkingMaxMs or globalTimingDefaults.questionProbe.maxMs).');
-    return;
-  }
+  // Missing timing config means no auto-advance for this phase.
+  if (!maxMs) return;
 
   cancelTimer = startTimer({
     onTick: (elapsed) => {
@@ -246,10 +244,8 @@ function enterResponsePhase() {
   // still gated by word-count enforcement) is the only way to submit.
   if (isTestingMode()) return;
 
-  if (!maxMs) {
-    console.error('[pra] No response-phase duration configured.');
-    return;
-  }
+  // Missing timing config means no forced auto-submit — Ctrl+Enter still works.
+  if (!maxMs) return;
 
   cancelTimer = startTimer({
     onTick: () => {},

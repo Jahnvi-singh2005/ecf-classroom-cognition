@@ -134,10 +134,8 @@ export function mount(container) {
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
   registerHandler('space', handleSpacebar);
 
-  if (!maxTimeMs) {
-    console.error('[guidedResolution] No duration configured (slide timing.maxMs or globalTimingDefaults.guidedResolution.maxMs) — cannot auto-advance.');
-    return;
-  }
+  // Missing timing config means no auto-advance — Spacebar (registered above) still works.
+  if (!maxTimeMs) return;
 
   // MARKER STUB [phase 2]: guided resolution onset
   // sendMarker(MARKERS.GUIDED_RESOLUTION_START);

@@ -43,10 +43,8 @@ export function mount(container) {
   // MARKER STUB [phase 2]: baseline start
   // sendMarker(MARKERS.BASELINE_START);
 
-  if (!durationMs) {
-    console.error('[baseline] No duration configured at globalTimingDefaults.baseline.maxMs — cannot auto-advance. Use "Skip baseline".');
-    return;
-  }
+  // Missing timing config means no auto-advance — "Skip baseline" is still available.
+  if (!durationMs) return;
 
   cancelTimer = startTimer({
     onTick: () => {},

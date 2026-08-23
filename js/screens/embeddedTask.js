@@ -87,10 +87,8 @@ function startThinkingTimer(content) {
     return;
   }
 
-  if (!maxMs) {
-    console.error('[embeddedTask] No thinking-phase duration configured (probe timing.maxMs or globalTimingDefaults.questionProbe.maxMs).');
-    return;
-  }
+  // Missing timing config means no auto-advance for this phase.
+  if (!maxMs) return;
 
   cancelTimer = startTimer({
     onTick: (elapsed) => {
@@ -230,10 +228,8 @@ function enterResponsePhase() {
   // still gated by word-count enforcement) is the only way to submit.
   if (isTestingMode()) return;
 
-  if (!maxMs) {
-    console.error('[embeddedTask] No response-phase duration configured.');
-    return;
-  }
+  // Missing timing config means no forced auto-submit — Ctrl+Enter still works.
+  if (!maxMs) return;
 
   cancelTimer = startTimer({
     onTick: () => {},
@@ -312,8 +308,8 @@ export function mount(container) {
   containerRef = container;
 
   const { currentTextIndex, currentSlideIndex, assignedGroup, content } = getState();
-  const condition = getCondition(assignedGroup, currentTextIndex);
-  const slides = getTextSlides(condition, currentTextIndex);
+  const resolvedCondition = getCondition(assignedGroup, currentTextIndex);
+  const slides = getTextSlides(resolvedCondition, currentTextIndex);
 
   probeIndex = currentSlideIndex;
   probeSlide = slides[probeIndex];

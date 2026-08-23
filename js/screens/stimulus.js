@@ -210,10 +210,8 @@ function renderContentSlide() {
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
   registerHandler('space', handleSpacebar);
 
-  if (!maxTimeMs) {
-    console.error('[stimulus] No duration configured for this slide (per-slide timing.maxMs or globalTimingDefaults.pureText.maxMs) — cannot auto-advance.');
-    return;
-  }
+  // Missing timing config means no auto-advance — Spacebar (registered above) still works.
+  if (!maxTimeMs) return;
 
   cancelTimer = startTimer({
     onTick: (elapsed) => { elapsedMs = elapsed; },
