@@ -78,7 +78,6 @@ function render() {
           <hr style="border:none;border-top:1px solid var(--border);margin:24px 0;">
 
           <p><strong>PIS Acknowledgement</strong></p>
-          <p>[ ] I have read and understand the PIS and my questions have been satisfactorily answered.</p>
         </div>
 
         <div class="consent-check-row">
