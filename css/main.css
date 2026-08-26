@@ -167,6 +167,8 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; m
   margin-bottom: 20px; font-size: 15px; line-height: 1.8; color: var(--text);
 }
 .consent-body p + p { margin-top: 16px; }
+.pis-scroll { max-height: 420px; overflow-y: auto; }
+.pis-scroll ul.instr-list { margin: 8px 0 4px; }
 .consent-check-row {
   display: flex; align-items: center; gap: 14px;
   background: var(--surface); border: 1.5px solid var(--border);

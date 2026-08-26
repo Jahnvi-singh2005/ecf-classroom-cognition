@@ -9,6 +9,7 @@ import { initKeyboard } from './keyboard.js';
 import { initEEGMode } from './eeg.js';
 import { showExitSessionButton, hideExitSessionButton } from './exitSession.js';
 
+import * as pisConsent from './screens/pisConsent.js';
 import * as registration from './screens/registration.js';
 import * as consent from './screens/consent.js';
 import * as selfReport from './screens/selfReport.js';
@@ -24,6 +25,7 @@ import * as breakScreen from './screens/breakScreen.js';
 import * as done from './screens/done.js';
 
 const SCREENS = {
+  pisConsent,
   registration,
   consent,
   selfReport,
@@ -68,7 +70,7 @@ export function goToPhase(phaseName) {
   // Exit Session is available for the whole experiment — from registration
   // submit (when a session first exists) through to the final PRA/feedback.
   // Hidden before a session exists and after it's already complete.
-  if (phaseName === 'registration' || phaseName === 'done') {
+  if (phaseName === 'pisConsent' || phaseName === 'registration' || phaseName === 'done') {
     hideExitSessionButton();
   } else {
     showExitSessionButton();
@@ -157,7 +159,7 @@ async function initApp() {
 
   resetState();
   setState({ content });
-  goToPhase('registration');
+  goToPhase('pisConsent');
 }
 
 initApp();
