@@ -8,6 +8,7 @@
 // no separate immediate Firestore write here.
 
 import { getState, setState } from '../state.js';
+import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const QUESTIONS = [
@@ -135,7 +136,18 @@ function handleSubmit() {
 export function mount(container) {
   containerRef = container;
   answers = {};
+  if (isTestingMode()) {
+    fillTestData();
+  }
   render();
+}
+
+// Testing mode bypasses the need to hand-fill every item on each test run —
+// values are pre-set before the first render, same as registration.js's and
+// selfReport.js's fillTestData, so "Submit feedback & continue" works with a
+// single click.
+function fillTestData() {
+  QUESTIONS.forEach((q) => { answers[q.key] = 4; });
 }
 
 export function unmount() {
