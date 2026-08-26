@@ -126,6 +126,22 @@ function render() {
   `;
 
   bindEvents();
+
+  if (isTestingMode()) {
+    fillTestData();
+  }
+}
+
+// Testing mode bypasses the need to hand-fill every required field on each test
+// run — called right after render() whenever testing mode is on, and again the
+// moment it's switched on, so "Begin Session" works immediately either way.
+function fillTestData() {
+  containerRef.querySelector('#field-name').value = 'Test Participant';
+  containerRef.querySelector('#field-age').value = '25';
+  containerRef.querySelector('#field-subject-id').value = 'TEST001';
+  containerRef.querySelector('#field-sex').value = SEX_OPTIONS[0];
+  containerRef.querySelector('#field-year').value = '1st Year';
+  containerRef.querySelector('#field-discipline').value = 'Computer Science';
 }
 
 function renderLslBanner(connected) {
