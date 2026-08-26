@@ -17,6 +17,7 @@ body.eeg-mode { background: #D0D0CC; }
 body.eeg-mode .topbar { background: #D8D8D4; border-color: #C4C4C0; }
 body.eeg-mode .passage-card { background: #DDDDD9; border-color: #C4C4C0; }
 body.eeg-mode .reading-footer { background: #D8D8D4; border-color: #C4C4C0; }
+body.cursor-hidden, body.cursor-hidden * { cursor: none; }
 
 #app {
   min-height: 100vh;

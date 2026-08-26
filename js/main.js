@@ -41,6 +41,11 @@ const SCREENS = {
 
 const DRAFT_AUTOSAVE_INTERVAL_MS = 10000;
 
+// Phases the participant navigates purely with the keyboard (no buttons to
+// click) — the mouse cursor is hidden there so it doesn't sit on screen as
+// a stray, unusable pointer once the experiment proper begins.
+const KEYBOARD_ONLY_PHASES = ['fixation', 'stimulus', 'embeddedTask', 'guidedResolution', 'pra'];
+
 let appContainer = null;
 let currentScreen = null;
 let autosaveIntervalId = null;
@@ -68,6 +73,8 @@ export function goToPhase(phaseName) {
   } else {
     showExitSessionButton();
   }
+
+  document.body.classList.toggle('cursor-hidden', KEYBOARD_ONLY_PHASES.includes(phaseName));
 
   if (phaseName === 'done') {
     stopAutosave();
