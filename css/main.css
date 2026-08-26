@@ -296,3 +296,10 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; m
 .eeg-blocking-card { background: var(--surface); border-radius: var(--radius); padding: 40px 44px; max-width: 420px; text-align: center; box-shadow: var(--shadow); }
 .eeg-blocking-message { font-size: 15px; color: var(--text); margin-bottom: 20px; line-height: 1.6; }
 .eeg-blocking-btn { width: auto; }
+
+/* ── PASSWORD MODAL ── */
+.password-modal-overlay {
+  position: fixed; inset: 0; background: rgba(26, 26, 24, 0.5);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.password-modal-card { background: var(--surface); border-radius: var(--radius); padding: 32px 36px; width: 360px; box-shadow: var(--shadow); }

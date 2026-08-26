@@ -198,17 +198,73 @@ async function handleTestingModeToggle() {
     return;
   }
 
-  const password = window.prompt('Enter the settings password to enable Testing Mode:');
-  if (password === null) return;
+  openPasswordModal(async (password) => {
+    const valid = await validatePassword(password);
+    if (valid) {
+      setTestingMode(true);
+      render();
+    }
+    return valid;
+  });
+}
 
-  const valid = await validatePassword(password);
-  if (!valid) {
-    window.alert('Incorrect password.');
-    return;
+// Masked password entry for the Testing Mode gate — window.prompt() has no way to
+// hide typed characters, so the password would show in plain text on screen.
+function openPasswordModal(onValidate) {
+  const overlay = document.createElement('div');
+  overlay.className = 'password-modal-overlay';
+  overlay.innerHTML = `
+    <div class="password-modal-card">
+      <h3 style="margin-bottom:6px;">Enable Testing Mode</h3>
+      <p class="subtitle" style="margin-bottom:16px;">Enter the settings password to continue.</p>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password-modal-input" autocomplete="off"/>
+      </div>
+      <span class="field-error" id="password-modal-error"></span>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button type="button" id="password-modal-cancel" class="btn btn-ghost" style="flex:1;justify-content:center;border:1px solid var(--border);">Cancel</button>
+        <button type="button" id="password-modal-submit" class="btn btn-primary" style="flex:1;margin-top:0;">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const input = overlay.querySelector('#password-modal-input');
+  const errorEl = overlay.querySelector('#password-modal-error');
+  input.focus();
+
+  function close() {
+    document.removeEventListener('keydown', onKeydown);
+    overlay.remove();
   }
 
-  setTestingMode(true);
-  render();
+  async function submit() {
+    const password = input.value;
+    if (!password) return;
+    const valid = await onValidate(password);
+    if (!valid) {
+      errorEl.textContent = 'Incorrect password.';
+      input.value = '';
+      input.focus();
+      return;
+    }
+    close();
+  }
+
+  function onKeydown(event) {
+    if (event.key === 'Escape') close();
+  }
+
+  overlay.querySelector('#password-modal-cancel').addEventListener('click', close);
+  overlay.querySelector('#password-modal-submit').addEventListener('click', submit);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submit();
+    }
+  });
+  document.addEventListener('keydown', onKeydown);
 }
 
 function fieldValue(id) {
