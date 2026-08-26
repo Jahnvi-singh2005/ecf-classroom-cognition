@@ -14,11 +14,13 @@ import * as registration from './screens/registration.js';
 import * as consent from './screens/consent.js';
 import * as selfReport from './screens/selfReport.js';
 import * as instructions from './screens/instructions.js';
+import * as experimentStart from './screens/experimentStart.js';
 import * as baseline from './screens/baseline.js';
 import * as fixation from './screens/fixation.js';
 import * as stimulus from './screens/stimulus.js';
 import * as embeddedTask from './screens/embeddedTask.js';
 import * as guidedResolution from './screens/guidedResolution.js';
+import * as praIntro from './screens/praIntro.js';
 import * as pra from './screens/pra.js';
 import * as postTextFeedback from './screens/postTextFeedback.js';
 import * as breakScreen from './screens/breakScreen.js';
@@ -30,11 +32,13 @@ const SCREENS = {
   consent,
   selfReport,
   instructions,
+  experimentStart,
   baseline,
   fixation,
   stimulus,
   embeddedTask,
   guidedResolution,
+  praIntro,
   pra,
   postTextFeedback,
   breakScreen,
@@ -46,7 +50,7 @@ const DRAFT_AUTOSAVE_INTERVAL_MS = 10000;
 // Phases the participant navigates purely with the keyboard (no buttons to
 // click) — the mouse cursor is hidden there so it doesn't sit on screen as
 // a stray, unusable pointer once the experiment proper begins.
-const KEYBOARD_ONLY_PHASES = ['fixation', 'stimulus', 'embeddedTask', 'guidedResolution', 'pra'];
+const KEYBOARD_ONLY_PHASES = ['experimentStart', 'fixation', 'stimulus', 'embeddedTask', 'guidedResolution', 'praIntro', 'pra'];
 
 let appContainer = null;
 let currentScreen = null;

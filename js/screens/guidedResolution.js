@@ -50,7 +50,7 @@ function advance() {
   setState({ currentSlideIndex: nextIndex });
 
   if (nextIndex >= slides.length) {
-    goToPhase('pra');
+    goToPhase('praIntro');
     return;
   }
 

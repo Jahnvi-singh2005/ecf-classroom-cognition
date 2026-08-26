@@ -106,8 +106,8 @@ function routeToNextSlide(slides, currentIndex) {
   setState({ currentSlideIndex: nextIndex });
 
   if (nextIndex >= slides.length) {
-    // Text fully read — hand off to the Post-Reading Assessment.
-    goToPhase('pra');
+    // Text fully read — hand off to the Post-Reading Assessment announcement slide.
+    goToPhase('praIntro');
     return;
   }
 

@@ -64,10 +64,8 @@ function handleBegin() {
 
   if (eegMode) {
     initEEGMode();
-    goToPhase('baseline');
-  } else {
-    goToPhase('stimulus');
   }
+  goToPhase('experimentStart');
 }
 
 export function mount(container) {
