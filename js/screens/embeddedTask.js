@@ -27,7 +27,7 @@ let optionsSlide = null;
 let condition = null; // 'active' | 'constructive'
 let sectionIndex = 0;
 
-let selectedIndex = 0;
+let selectedIndex = null;
 let typedText = '';
 let hint = '';
 
@@ -136,7 +136,9 @@ function markFirstInput() {
 }
 
 function handleArrowUp() {
-  selectedIndex = (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
+  selectedIndex = selectedIndex === null
+    ? OPTION_LETTERS.length - 1
+    : (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
   updateActiveSelection();
   markFirstInput();
   // MARKER STUB [phase 2]: option navigated
@@ -144,7 +146,7 @@ function handleArrowUp() {
 }
 
 function handleArrowDown() {
-  selectedIndex = (selectedIndex + 1) % OPTION_LETTERS.length;
+  selectedIndex = selectedIndex === null ? 0 : (selectedIndex + 1) % OPTION_LETTERS.length;
   updateActiveSelection();
   markFirstInput();
   // MARKER STUB [phase 2]: option navigated
@@ -215,7 +217,7 @@ function enterResponsePhase() {
   // sendMarker(MARKERS.RESPONSE_PHASE_START);
 
   if (condition === 'active') {
-    selectedIndex = 0; // first option pre-highlighted
+    selectedIndex = null; // nothing pre-highlighted — first arrow key selects an option
     renderResponseActive();
     registerHandler('arrow-up', handleArrowUp);
     registerHandler('arrow-down', handleArrowDown);
@@ -240,6 +242,10 @@ function enterResponsePhase() {
 
 function handleSubmit() {
   if (hasSubmitted) return;
+
+  if (condition === 'active' && selectedIndex === null) {
+    return;
+  }
 
   if (condition === 'constructive') {
     const wordCount = countWords(typedText);
@@ -317,7 +323,7 @@ export function mount(container) {
   condition = probeSlide?.type === 'active-question-probe' ? 'active' : 'constructive';
   sectionIndex = computeSectionIndex(slides, probeIndex);
 
-  selectedIndex = 0;
+  selectedIndex = null;
   typedText = '';
   hint = '';
   t3FirstInput = null;

@@ -2,6 +2,7 @@
 // Rebuild plan §6.3 / prototype screen 3.
 
 import { setState } from '../state.js';
+import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const QUESTIONS = [
@@ -102,7 +103,18 @@ export function mount(container) {
   containerRef = container;
   answers = {};
   reflection = '';
+  if (isTestingMode()) {
+    fillTestData();
+  }
   render();
+}
+
+// Testing mode bypasses the need to hand-fill every item on each test run —
+// values are pre-set before the first render, same as registration.js's
+// fillTestData, so "Continue to Instructions" works with a single click.
+function fillTestData() {
+  QUESTIONS.forEach((q) => { answers[q.key] = 4; });
+  reflection = 'Test reflection response.';
 }
 
 export function unmount() {

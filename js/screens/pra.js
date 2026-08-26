@@ -23,7 +23,7 @@ let questions = [];
 let questionIndex = 0;
 let question = null;
 
-let selectedIndex = 0;
+let selectedIndex = null;
 let typedText = '';
 let hint = '';
 
@@ -150,7 +150,9 @@ function markFirstInput() {
 }
 
 function handleArrowUp() {
-  selectedIndex = (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
+  selectedIndex = selectedIndex === null
+    ? OPTION_LETTERS.length - 1
+    : (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
   updateMcSelection();
   markFirstInput();
   // MARKER STUB [phase 2]: option navigated (MC)
@@ -158,7 +160,7 @@ function handleArrowUp() {
 }
 
 function handleArrowDown() {
-  selectedIndex = (selectedIndex + 1) % OPTION_LETTERS.length;
+  selectedIndex = selectedIndex === null ? 0 : (selectedIndex + 1) % OPTION_LETTERS.length;
   updateMcSelection();
   markFirstInput();
   // MARKER STUB [phase 2]: option navigated (MC)
@@ -233,7 +235,7 @@ function enterResponsePhase() {
   if (isWritten) {
     renderResponseWritten();
   } else {
-    selectedIndex = 0;
+    selectedIndex = null; // nothing pre-highlighted — first arrow key selects an option
     renderResponseMc();
     registerHandler('arrow-up', handleArrowUp);
     registerHandler('arrow-down', handleArrowDown);
@@ -256,6 +258,10 @@ function enterResponsePhase() {
 
 function handleSubmit() {
   if (hasSubmitted) return;
+
+  if (question.type !== 'written' && selectedIndex === null) {
+    return;
+  }
 
   if (question.type === 'written') {
     const wordCount = countWords(typedText);
@@ -342,7 +348,7 @@ export function mount(container) {
   questionIndex = currentPraIndex;
   question = questions[questionIndex];
 
-  selectedIndex = 0;
+  selectedIndex = null;
   typedText = '';
   hint = '';
   t3FirstInput = null;
