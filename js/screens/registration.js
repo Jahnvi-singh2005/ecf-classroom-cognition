@@ -65,7 +65,7 @@ function render() {
         <div class="field-row">
           <div class="field">
             <label>Subject ID <span>*</span></label>
-            <input type="text" id="field-subject-id" placeholder="e.g. P001"/>
+            <input type="text" id="field-subject-id" placeholder="e.g. sub-001"/>
             <span class="field-error" id="error-subject-id"></span>
           </div>
           <div class="field">
@@ -138,7 +138,7 @@ function render() {
 function fillTestData() {
   containerRef.querySelector('#field-name').value = 'Test Participant';
   containerRef.querySelector('#field-age').value = '25';
-  containerRef.querySelector('#field-subject-id').value = 'TEST001';
+  containerRef.querySelector('#field-subject-id').value = 'sub-001';
   containerRef.querySelector('#field-sex').value = SEX_OPTIONS[0];
   containerRef.querySelector('#field-year').value = '1st Year';
   containerRef.querySelector('#field-discipline').value = 'Computer Science';
@@ -292,7 +292,11 @@ function validate() {
   if (!age || Number.isNaN(Number(age)) || Number(age) < 1 || Number(age) > 120) {
     setError('age', 'Please enter a valid age (1-120)'); valid = false;
   }
-  if (!subjectId) { setError('subject-id', 'Subject ID is required'); valid = false; }
+  if (!subjectId) {
+    setError('subject-id', 'Subject ID is required'); valid = false;
+  } else if (!/^sub-\d{3}$/.test(subjectId)) {
+    setError('subject-id', 'Subject ID must be in the format sub-001'); valid = false;
+  }
   if (!sex) { setError('sex', 'Sex is required'); valid = false; }
   if (!year) { setError('year', 'Year of study is required'); valid = false; }
   if (!discipline) { setError('discipline', 'Discipline of study is required'); valid = false; }

@@ -20,14 +20,14 @@ describe('buildParticipantKey', () => {
   });
 
   test('produces same key for same input (deterministic)', () => {
-    const participant = { subjectId: 'P002' };
+    const participant = { subjectId: 'sub-002' };
     assert.equal(buildParticipantKey(participant), buildParticipantKey({ ...participant }));
   });
 
   test('produces different keys for different participants', () => {
     assert.notEqual(
-      buildParticipantKey({ subjectId: 'P001' }),
-      buildParticipantKey({ subjectId: 'P002' }),
+      buildParticipantKey({ subjectId: 'sub-001' }),
+      buildParticipantKey({ subjectId: 'sub-002' }),
     );
   });
 });

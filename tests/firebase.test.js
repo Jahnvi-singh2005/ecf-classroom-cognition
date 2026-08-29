@@ -34,7 +34,7 @@ function createMemoryLocalStorage() {
 
 function buildParticipant() {
   return {
-    subjectId: 'P001', name: 'Test Participant', age: 21,
+    subjectId: 'sub-001', name: 'Test Participant', age: 21,
     sex: 'Female', yearOfStudy: '2nd Year', disciplineOfStudy: 'Psychology',
   };
 }
@@ -42,7 +42,7 @@ function buildParticipant() {
 function buildSessionPayload(overrides = {}) {
   return {
     sessionId: 'sess-1',
-    participantKey: 'subject-p001',
+    participantKey: 'subject-sub-001',
     participant: buildParticipant(),
     assignedGroup: 1,
     eegMode: false,
@@ -211,9 +211,9 @@ describe('firebase.js — Firestore mode', () => {
   });
 
   test('writeParticipant upserts (does not overwrite) existing participant', async () => {
-    fake.mockData.docs.set('participants/subject-p001', { participant: { name: 'Old Name' }, note: 'existing' });
-    await fb.writeParticipant('subject-p001', { participant: { name: 'New Name' } });
-    const call = fake.mockCalls.setDoc.find((c) => c.path === 'participants/subject-p001');
+    fake.mockData.docs.set('participants/subject-sub-001', { participant: { name: 'Old Name' }, note: 'existing' });
+    await fb.writeParticipant('subject-sub-001', { participant: { name: 'New Name' } });
+    const call = fake.mockCalls.setDoc.find((c) => c.path === 'participants/subject-sub-001');
     assert.deepEqual(call.options, { merge: true });
   });
 
