@@ -125,6 +125,7 @@ function ensureSocket() {
 }
 
 export function sendMarker(markerId) {
+  console.log('[MARKER DEBUG] sendMarker called with', markerId, 'eegMode=', getState().eegMode);
   if (getState().eegMode !== true) return;
 
   const ws = ensureSocket();
