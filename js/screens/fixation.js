@@ -6,6 +6,7 @@
 import { getState } from '../state.js';
 import { startTimer } from '../timer.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 let containerRef = null;
 let cancelTimer = null;
@@ -22,6 +23,7 @@ function render() {
 
 function advance() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  sendMarker(MARKERS.FIXATION_OFFSET);
   goToPhase('stimulus');
 }
 
@@ -32,8 +34,7 @@ export function mount(container) {
   const { content } = getState();
   const durationMs = content?.globalTimingDefaults?.fixationCross?.durationMs;
 
-  // MARKER STUB [phase 2]: fixation onset
-  // sendMarker(MARKERS.FIXATION_ONSET);
+  sendMarker(MARKERS.FIXATION_ONSET);
 
   // Missing timing config means no auto-advance.
   if (!durationMs) return;

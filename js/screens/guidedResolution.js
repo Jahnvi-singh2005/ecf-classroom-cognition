@@ -10,6 +10,7 @@ import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { canProgress } from '../testingMode.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -40,8 +41,7 @@ function advance() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
   unregisterHandler('arrow-right');
 
-  // MARKER STUB [phase 2]: guided resolution dismissed (end)
-  // sendMarker(MARKERS.GUIDED_RESOLUTION_END);
+  sendMarker(MARKERS.GUIDED_DISMISSED);
 
   const { currentTextIndex, assignedGroup } = getState();
   const condition = getCondition(assignedGroup, currentTextIndex);
@@ -137,8 +137,7 @@ export function mount(container) {
   // Missing timing config means no auto-advance — ArrowRight (registered above) still works.
   if (!maxTimeMs) return;
 
-  // MARKER STUB [phase 2]: guided resolution onset
-  // sendMarker(MARKERS.GUIDED_RESOLUTION_START);
+  sendMarker(MARKERS.GUIDED_ONSET);
 
   cancelTimer = startTimer({
     onTick: (elapsed) => { elapsedMs = elapsed; },

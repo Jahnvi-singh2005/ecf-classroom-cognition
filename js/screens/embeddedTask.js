@@ -15,6 +15,7 @@ import { renderMarkdown } from '../utils/markdown.js';
 import { countWords, isWithinRange } from '../utils/wordCount.js';
 import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -141,16 +142,14 @@ function handleArrowUp() {
     : (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
   updateActiveSelection();
   markFirstInput();
-  // MARKER STUB [phase 2]: option navigated
-  // sendMarker(MARKERS.OPTION_NAVIGATED);
+  sendMarker(MARKERS.EMBED_NAVIGATE_ACTIVE);
 }
 
 function handleArrowDown() {
   selectedIndex = selectedIndex === null ? 0 : (selectedIndex + 1) % OPTION_LETTERS.length;
   updateActiveSelection();
   markFirstInput();
-  // MARKER STUB [phase 2]: option navigated
-  // sendMarker(MARKERS.OPTION_NAVIGATED);
+  sendMarker(MARKERS.EMBED_NAVIGATE_ACTIVE);
 }
 
 // ─── Response phase — Constructive ─────────────────────────────────────────
@@ -213,8 +212,7 @@ function enterResponsePhase() {
   const defaults = content?.globalTimingDefaults?.[globalKey];
   const maxMs = optionsSlide.timing?.maxMs ?? defaults?.maxMs;
 
-  // MARKER STUB [phase 2]: response phase start
-  // sendMarker(MARKERS.RESPONSE_PHASE_START);
+  sendMarker(condition === 'active' ? MARKERS.EMBED_RESPOND_ACTIVE : MARKERS.EMBED_RESPOND_CONSTRUCTIVE);
 
   if (condition === 'active') {
     selectedIndex = null; // nothing pre-highlighted — first arrow key selects an option
@@ -299,8 +297,7 @@ function finalizeSubmission(autoSubmitted) {
     autoSubmitted,
   });
 
-  // MARKER STUB [phase 2]: response submitted
-  // sendMarker(MARKERS.RESPONSE_SUBMITTED);
+  sendMarker(condition === 'active' ? MARKERS.EMBED_SUBMIT_ACTIVE : MARKERS.EMBED_SUBMIT_CONSTRUCTIVE);
 
   // Advance state.currentSlideIndex past the options/textbox slide, onto the
   // guided-resolution slide that always follows it, then hand off.
@@ -337,8 +334,7 @@ export function mount(container) {
 
   t1QuestionShown = Date.now();
 
-  // MARKER STUB [phase 2]: thinking phase start
-  // sendMarker(MARKERS.THINKING_PHASE_START);
+  sendMarker(condition === 'active' ? MARKERS.EMBED_THINK_ACTIVE : MARKERS.EMBED_THINK_CONSTRUCTIVE);
 
   renderThinking();
   startThinkingTimer(content);

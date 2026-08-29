@@ -1,10 +1,9 @@
 // eeg.js — EEG mode logic: full-screen enforcement, tab-switch lock + visibility
 // logging, EEG background colour, and the LSL bridge connectivity check used on the
-// registration screen. Marker transport is phase 2 (see EEG_ARCHITECTURE.md) — every
-// marker point in the screen modules carries an inert `MARKER STUB [phase 2]` comment
-// pair and this file sends nothing over the wire.
+// registration screen. Event markers are sent via markers.js's sendMarker().
 
 import { getState, setState } from './state.js';
+import { sendMarker, MARKERS } from './markers.js';
 
 const LSL_BRIDGE_URL = 'ws://localhost:8765';
 const LSL_CHECK_TIMEOUT_MS = 1500;
@@ -78,6 +77,7 @@ function enforceFullScreen() {
   requestFullScreen();
   document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
+      sendMarker(MARKERS.FULLSCREEN_EXIT);
       showBlockingOverlay('full-screen');
     } else {
       hideBlockingOverlay();
@@ -89,13 +89,11 @@ function lockTabSwitching() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       logVisibilityEvent('hidden');
-      // MARKER STUB [phase 2]: tab hidden detected
-      // sendMarker(MARKERS.TAB_HIDDEN);
+      sendMarker(MARKERS.TAB_HIDDEN);
       showBlockingOverlay('tab-switch');
     } else {
       logVisibilityEvent('visible');
-      // MARKER STUB [phase 2]: tab visible (returned)
-      // sendMarker(MARKERS.TAB_VISIBLE);
+      sendMarker(MARKERS.TAB_VISIBLE);
       hideBlockingOverlay();
     }
   });
@@ -109,8 +107,7 @@ export function initEEGMode() {
   applyBackgroundClass(true);
   enforceFullScreen();
   lockTabSwitching();
-  // MARKER STUB [phase 2]: session start
-  // sendMarker(MARKERS.SESSION_START);
+  sendMarker(MARKERS.SESSION_START);
 }
 
 // Attempts a WebSocket connection to the Python bridge. Resolves true if it opens,

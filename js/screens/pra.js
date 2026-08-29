@@ -12,6 +12,7 @@ import { renderMarkdown } from '../utils/markdown.js';
 import { countWords, isWithinRange } from '../utils/wordCount.js';
 import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 const TOTAL_QUESTIONS = 6;
@@ -155,16 +156,14 @@ function handleArrowUp() {
     : (selectedIndex + OPTION_LETTERS.length - 1) % OPTION_LETTERS.length;
   updateMcSelection();
   markFirstInput();
-  // MARKER STUB [phase 2]: option navigated (MC)
-  // sendMarker(MARKERS.OPTION_NAVIGATED);
+  sendMarker(MARKERS.PRA_NAVIGATE);
 }
 
 function handleArrowDown() {
   selectedIndex = selectedIndex === null ? 0 : (selectedIndex + 1) % OPTION_LETTERS.length;
   updateMcSelection();
   markFirstInput();
-  // MARKER STUB [phase 2]: option navigated (MC)
-  // sendMarker(MARKERS.OPTION_NAVIGATED);
+  sendMarker(MARKERS.PRA_NAVIGATE);
 }
 
 // ─── Response phase — written (Q4–Q6 by content convention) ───────────────────
@@ -229,8 +228,7 @@ function enterResponsePhase() {
   const defaults = content?.globalTimingDefaults?.[globalKey];
   const maxMs = question.timing?.responseMaxMs ?? defaults?.maxMs;
 
-  // MARKER STUB [phase 2]: response phase start
-  // sendMarker(MARKERS.RESPONSE_PHASE_START);
+  sendMarker(isWritten ? MARKERS.PRA_RESPOND_WRITTEN : MARKERS.PRA_RESPOND_MC);
 
   if (isWritten) {
     renderResponseWritten();
@@ -316,8 +314,7 @@ function finalizeSubmission(autoSubmitted) {
     autoSubmitted,
   });
 
-  // MARKER STUB [phase 2]: response submitted
-  // sendMarker(MARKERS.RESPONSE_SUBMITTED);
+  sendMarker(question.type === 'written' ? MARKERS.PRA_SUBMIT_WRITTEN : MARKERS.PRA_SUBMIT_MC);
 
   advanceToNextQuestion();
 }
@@ -326,8 +323,7 @@ function advanceToNextQuestion() {
   const nextIndex = questionIndex + 1;
 
   if (nextIndex >= questions.length) {
-    // MARKER STUB [phase 2]: PRA end
-    // sendMarker(MARKERS.PRA_END);
+    sendMarker(MARKERS.PRA_END);
 
     finalizeText();
     setState({ currentPraIndex: 0 });
@@ -363,13 +359,10 @@ export function mount(container) {
   t1QuestionShown = Date.now();
 
   if (questionIndex === 0) {
-    // MARKER STUB [phase 2]: PRA start
-    // sendMarker(MARKERS.PRA_START);
+    sendMarker(MARKERS.PRA_START);
   }
-  // MARKER STUB [phase 2]: question onset
-  // sendMarker(MARKERS.QUESTION_ONSET);
-  // MARKER STUB [phase 2]: thinking phase start
-  // sendMarker(MARKERS.THINKING_PHASE_START);
+  sendMarker(question.type === 'written' ? MARKERS.PRA_QUESTION_ONSET_WRITTEN : MARKERS.PRA_QUESTION_ONSET_MC);
+  sendMarker(MARKERS.PRA_THINK_START);
 
   renderThinking();
   startThinkingTimer(content);

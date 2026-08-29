@@ -4,6 +4,7 @@
 import { getState, setState } from '../state.js';
 import { writeSession, writeParticipant, writeParticipantSession, completeDraft } from '../firebase.js';
 import { exitFullScreen } from '../eeg.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 let containerRef = null;
 
@@ -61,8 +62,7 @@ export async function mount(container) {
   const payload = buildSessionPayload();
   setState({ sessionEndTime: payload.sessionEndTime });
 
-  // MARKER STUB [phase 2]: session end
-  // sendMarker(MARKERS.SESSION_END);
+  sendMarker(MARKERS.SESSION_END);
 
   try {
     await writeSession(sessionId, payload);

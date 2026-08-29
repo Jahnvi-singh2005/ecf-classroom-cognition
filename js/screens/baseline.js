@@ -5,6 +5,7 @@
 import { getState } from '../state.js';
 import { startTimer } from '../timer.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 let containerRef = null;
 let cancelTimer = null;
@@ -28,8 +29,7 @@ function render() {
 
 function advance() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  // MARKER STUB [phase 2]: baseline end
-  // sendMarker(MARKERS.BASELINE_END);
+  sendMarker(MARKERS.BASELINE_END);
   goToPhase('fixation');
 }
 
@@ -40,8 +40,7 @@ export function mount(container) {
   const { content } = getState();
   const durationMs = content?.globalTimingDefaults?.baseline?.maxMs;
 
-  // MARKER STUB [phase 2]: baseline start
-  // sendMarker(MARKERS.BASELINE_START);
+  sendMarker(MARKERS.BASELINE_START);
 
   // Missing timing config means no auto-advance — "Skip baseline" is still available.
   if (!durationMs) return;

@@ -6,7 +6,9 @@
     "test": "node --test tests/**/*.test.js",
     "test:watch": "node --test --watch tests/**/*.test.js",
     "cleanup:test-sessions": "node scripts/cleanup-test-sessions.js",
-    "cleanup:test-sessions:confirm": "node scripts/cleanup-test-sessions.js --confirm"
+    "cleanup:test-sessions:confirm": "node scripts/cleanup-test-sessions.js --confirm",
+    "clear:all-data": "node scripts/clear-all-data.js",
+    "clear:all-data:confirm": "node scripts/clear-all-data.js --confirm"
   },
   "devDependencies": {
     "firebase-admin": "^12.7.0"

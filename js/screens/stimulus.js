@@ -16,6 +16,7 @@ import { registerHandler, unregisterHandler } from '../keyboard.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { canProgress } from '../testingMode.js';
 import { goToPhase } from '../main.js';
+import { sendMarker, MARKERS } from '../markers.js';
 
 let containerRef = null;
 let cancelTimer = null;
@@ -95,8 +96,7 @@ function advance(advancedBy) {
     maxTimeMs,
   });
 
-  // MARKER STUB [phase 2]: slide advance
-  // sendMarker(MARKERS.SLIDE_ADVANCE);
+  sendMarker(advancedBy === 'auto-timeout' ? MARKERS.SLIDE_ADVANCE_TIMEOUT : MARKERS.SLIDE_ADVANCE_KEY);
 
   routeToNextSlide(slides, currentSlideIndex);
 }
@@ -143,6 +143,10 @@ function renderTitleSlide(textMeta) {
   `;
 
   registerHandler('arrow-right', dismissTitleSlide);
+
+  const { assignedGroup, currentTextIndex } = getState();
+  const condition = getCondition(assignedGroup, currentTextIndex);
+  sendMarker(MARKERS['TITLE_ONSET_' + condition.toUpperCase()]);
 }
 
 function dismissTitleSlide() {
@@ -219,8 +223,7 @@ function renderContentSlide() {
     durationMs: maxTimeMs,
   });
 
-  // MARKER STUB [phase 2]: slide onset
-  // sendMarker(MARKERS.SLIDE_ONSET);
+  sendMarker(MARKERS[`SLIDE_ONSET_${condition.toUpperCase()}`]);
 }
 
 export function unmount() {
