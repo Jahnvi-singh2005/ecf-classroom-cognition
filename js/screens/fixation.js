@@ -11,6 +11,12 @@ import { sendMarker, MARKERS } from '../markers.js';
 let containerRef = null;
 let cancelTimer = null;
 
+// This screen has no manual advance (no buttons, no keyboard handler) — it must
+// always auto-advance. Falls back to this value when globalTimingDefaults.fixationCross
+// .durationMs is unset/0 (e.g. a freshly-created project's default config), so a
+// missing admin setting can never leave the experiment stuck on the fixation cross.
+const DEFAULT_FIXATION_DURATION_MS = 2000;
+
 function render() {
   containerRef.innerHTML = `
     <div class="topbar">
@@ -32,12 +38,9 @@ export function mount(container) {
   render();
 
   const { content } = getState();
-  const durationMs = content?.globalTimingDefaults?.fixationCross?.durationMs;
+  const durationMs = content?.globalTimingDefaults?.fixationCross?.durationMs || DEFAULT_FIXATION_DURATION_MS;
 
   sendMarker(MARKERS.FIXATION_ONSET);
-
-  // Missing timing config means no auto-advance.
-  if (!durationMs) return;
 
   cancelTimer = startTimer({
     onTick: () => {},
