@@ -1,5 +1,5 @@
 // screens/guidedResolution.js — Guided Resolution (Active/Constructive only).
-// Build-spec §11.9 / rebuild plan §6.9. No buttons, no mouse interaction. Spacebar
+// Build-spec §11.9 / rebuild plan §6.9. No buttons, no mouse interaction. ArrowRight
 // advances after min time; auto-advances at max time. Shown after every embedded
 // task response, regardless of correctness.
 
@@ -29,7 +29,7 @@ function computeSectionNumber(slides, index) {
   return count + 1; // this resolution's own section number (1-indexed)
 }
 
-function handleSpacebar() {
+function handleArrowRight() {
   if (!canProgress(elapsedMs, minTimeMs)) return;
   advance();
 }
@@ -38,7 +38,7 @@ function advance() {
   if (hasAdvanced) return;
   hasAdvanced = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
 
   // MARKER STUB [phase 2]: guided resolution dismissed (end)
   // sendMarker(MARKERS.GUIDED_RESOLUTION_END);
@@ -120,7 +120,7 @@ export function mount(container) {
           <div class="resolution-text">${renderMarkdown(resolutionSlide.content || '')}</div>
         </div>
         <div class="resolution-footer">
-          <div class="kbd-hint"><kbd class="kbd">Spacebar</kbd> to continue${hasNextSection ? ` to Section ${sectionNumber + 1}` : ''}</div>
+          <div class="kbd-hint"><kbd class="kbd">→</kbd> to continue${hasNextSection ? ` to Section ${sectionNumber + 1}` : ''}</div>
         </div>
       </div>
     </div>
@@ -130,11 +130,11 @@ export function mount(container) {
   minTimeMs = resolutionSlide.timing?.minMs ?? defaults?.minMs;
   maxTimeMs = resolutionSlide.timing?.maxMs ?? defaults?.maxMs;
 
-  // Spacebar must work regardless of whether auto-advance timing is configured —
+  // ArrowRight must work regardless of whether auto-advance timing is configured —
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
-  registerHandler('space', handleSpacebar);
+  registerHandler('arrow-right', handleArrowRight);
 
-  // Missing timing config means no auto-advance — Spacebar (registered above) still works.
+  // Missing timing config means no auto-advance — ArrowRight (registered above) still works.
   if (!maxTimeMs) return;
 
   // MARKER STUB [phase 2]: guided resolution onset
@@ -149,6 +149,6 @@ export function mount(container) {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
   containerRef = null;
 }

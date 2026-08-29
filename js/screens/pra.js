@@ -1,7 +1,7 @@
 // screens/pra.js — Post-Reading Assessment. Build-spec §11.10 / rebuild plan §6.10.
 // No buttons, no mouse interaction. 6 questions per text, one per screen, in array
 // order. Each question: thinking phase (auto-advance only) -> response phase
-// (MC: arrow keys + Ctrl+Enter; written: type + Ctrl+Enter gated by word count).
+// (MC: arrow keys + ArrowRight; written: type + ArrowRight gated by word count).
 // Correct MC answers are never revealed here (rebuild plan §6.10).
 
 import { getState, setState } from '../state.js';
@@ -94,9 +94,9 @@ function startThinkingTimer(content) {
   const maxMs = question.timing?.thinkingMaxMs ?? defaults?.maxMs;
 
   // Testing mode: no auto-advance timer at all — thinking phase otherwise has no
-  // manual escape, so Spacebar becomes the only way forward.
+  // manual escape, so ArrowRight becomes the only way forward.
   if (isTestingMode()) {
-    registerHandler('space', enterResponsePhase);
+    registerHandler('arrow-right', enterResponsePhase);
     return;
   }
 
@@ -132,7 +132,7 @@ function renderResponseMc() {
         </div>
         <div class="task-footer">
           <div class="kbd-hint"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> to navigate</div>
-          <div class="kbd-hint"><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> to submit</div>
+          <div class="kbd-hint"><kbd class="kbd">→</kbd> to submit</div>
         </div>
       </div>
     </div>
@@ -189,7 +189,7 @@ function renderResponseWritten() {
         ${hint ? `<p class="field-error">${hint}</p>` : ''}
         <div class="task-footer">
           <div class="kbd-hint">${minWords}–${maxWords} words required to submit</div>
-          <div class="kbd-hint"><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> to submit</div>
+          <div class="kbd-hint"><kbd class="kbd">→</kbd> to submit</div>
         </div>
       </div>
     </div>
@@ -220,7 +220,7 @@ function handleWrittenInput(event) {
 
 function enterResponsePhase() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space'); // clears the testing-mode thinking-phase skip, if any
+  unregisterHandler('arrow-right'); // clears the testing-mode thinking-phase skip, if any
   t2ResponsePhaseStart = Date.now();
 
   const { content } = getState();
@@ -240,13 +240,13 @@ function enterResponsePhase() {
     registerHandler('arrow-up', handleArrowUp);
     registerHandler('arrow-down', handleArrowDown);
   }
-  registerHandler('ctrl+enter', handleSubmit);
+  registerHandler('arrow-right', handleSubmit);
 
-  // Testing mode: no forced auto-submit — Ctrl+Enter (already registered above,
+  // Testing mode: no forced auto-submit — ArrowRight (already registered above,
   // still gated by word-count enforcement) is the only way to submit.
   if (isTestingMode()) return;
 
-  // Missing timing config means no forced auto-submit — Ctrl+Enter still works.
+  // Missing timing config means no forced auto-submit — ArrowRight still works.
   if (!maxMs) return;
 
   cancelTimer = startTimer({
@@ -281,7 +281,7 @@ function finalizeSubmission(autoSubmitted) {
   if (hasSubmitted) return;
   hasSubmitted = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('ctrl+enter');
+  unregisterHandler('arrow-right');
   unregisterHandler('arrow-up');
   unregisterHandler('arrow-down');
 
@@ -377,8 +377,7 @@ export function mount(container) {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
-  unregisterHandler('ctrl+enter');
+  unregisterHandler('arrow-right');
   unregisterHandler('arrow-up');
   unregisterHandler('arrow-down');
   containerRef = null;

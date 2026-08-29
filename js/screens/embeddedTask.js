@@ -1,6 +1,6 @@
 // screens/embeddedTask.js — Active/Constructive embedded task. Build-spec §11.8 /
 // rebuild plan §6.8. No buttons, no mouse interaction on options. Thinking phase
-// auto-advances to response phase; response phase submits via Ctrl+Enter (Active:
+// auto-advances to response phase; response phase submits via ArrowRight (Active:
 // arrow-key-selected option; Constructive: typed text gated by word count).
 //
 // Mounted with state.currentSlideIndex pointing at the question-probe slide; the very
@@ -81,9 +81,9 @@ function startThinkingTimer(content) {
   const maxMs = probeSlide.timing?.maxMs ?? defaults?.maxMs;
 
   // Testing mode: no auto-advance timer at all — thinking phase otherwise has no
-  // manual escape, so Spacebar becomes the only way forward.
+  // manual escape, so ArrowRight becomes the only way forward.
   if (isTestingMode()) {
-    registerHandler('space', enterResponsePhase);
+    registerHandler('arrow-right', enterResponsePhase);
     return;
   }
 
@@ -118,7 +118,7 @@ function renderResponseActive() {
         </div>
         <div class="task-footer">
           <div class="kbd-hint"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> to navigate</div>
-          <div class="kbd-hint"><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> to submit</div>
+          <div class="kbd-hint"><kbd class="kbd">→</kbd> to submit</div>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@ function renderResponseConstructive() {
         ${hint ? `<p class="field-error">${hint}</p>` : ''}
         <div class="task-footer">
           <div class="kbd-hint">Word count must be within range (${minWords}–${maxWords})</div>
-          <div class="kbd-hint"><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> to submit</div>
+          <div class="kbd-hint"><kbd class="kbd">→</kbd> to submit</div>
         </div>
       </div>
     </div>
@@ -205,7 +205,7 @@ function handleConstructiveInput(event) {
 
 function enterResponsePhase() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space'); // clears the testing-mode thinking-phase skip, if any
+  unregisterHandler('arrow-right'); // clears the testing-mode thinking-phase skip, if any
   t2ResponsePhaseStart = Date.now();
 
   const { content } = getState();
@@ -224,13 +224,13 @@ function enterResponsePhase() {
   } else {
     renderResponseConstructive();
   }
-  registerHandler('ctrl+enter', handleSubmit);
+  registerHandler('arrow-right', handleSubmit);
 
-  // Testing mode: no forced auto-submit — Ctrl+Enter (already registered above,
+  // Testing mode: no forced auto-submit — ArrowRight (already registered above,
   // still gated by word-count enforcement) is the only way to submit.
   if (isTestingMode()) return;
 
-  // Missing timing config means no forced auto-submit — Ctrl+Enter still works.
+  // Missing timing config means no forced auto-submit — ArrowRight still works.
   if (!maxMs) return;
 
   cancelTimer = startTimer({
@@ -265,7 +265,7 @@ function finalizeSubmission(autoSubmitted) {
   if (hasSubmitted) return;
   hasSubmitted = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('ctrl+enter');
+  unregisterHandler('arrow-right');
   unregisterHandler('arrow-up');
   unregisterHandler('arrow-down');
 
@@ -346,8 +346,7 @@ export function mount(container) {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
-  unregisterHandler('ctrl+enter');
+  unregisterHandler('arrow-right');
   unregisterHandler('arrow-up');
   unregisterHandler('arrow-down');
   containerRef = null;

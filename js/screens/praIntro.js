@@ -1,7 +1,7 @@
 // screens/praIntro.js — "Post-Reading Assessment starts" announcement slide. Shown
 // once per text, right after the reading (and any embedded tasks/guided resolutions)
 // for that text finishes, before the first PRA question mounts. No buttons, no mouse
-// interaction — Spacebar is the only way forward, matching the reading-slide
+// interaction — ArrowRight is the only way forward, matching the reading-slide
 // convention (visual style reused from stimulus.js's per-text title slide).
 
 import { getState } from '../state.js';
@@ -24,16 +24,16 @@ function render() {
         </div>
       </div>
       <div class="reading-footer">
-        <div class="kbd-hint"><kbd class="kbd">Spacebar</kbd> to begin</div>
+        <div class="kbd-hint"><kbd class="kbd">→</kbd> to begin</div>
       </div>
     </div>
   `;
 
-  registerHandler('space', advance);
+  registerHandler('arrow-right', advance);
 }
 
 function advance() {
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
   goToPhase('pra');
 }
 
@@ -43,6 +43,6 @@ export function mount(container) {
 }
 
 export function unmount() {
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
   containerRef = null;
 }

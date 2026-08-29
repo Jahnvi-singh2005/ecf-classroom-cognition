@@ -1,5 +1,5 @@
 // screens/stimulus.js — Reading Slides, all 4 conditions. Build-spec §11.7 /
-// rebuild plan §6.7. No buttons, no mouse interaction. Spacebar advances after min
+// rebuild plan §6.7. No buttons, no mouse interaction. ArrowRight advances after min
 // time; auto-advances at max time. Every advance is logged to readingAdvanceMarkers.
 //
 // state.currentSlideIndex indexes into the FULL per-text slide array (pure-text,
@@ -70,16 +70,16 @@ function parseTitleAndAuthor(rawTitle) {
   return { title: match[1], author: match[2] };
 }
 
-function handleSpacebar() {
+function handleArrowRight() {
   if (!canProgress(elapsedMs, minTimeMs)) return;
-  advance('spacebar');
+  advance('arrow-right');
 }
 
 function advance(advancedBy) {
   if (hasAdvanced) return;
   hasAdvanced = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
 
   const { currentTextIndex, currentSlideIndex, assignedGroup } = getState();
   const condition = getCondition(assignedGroup, currentTextIndex);
@@ -137,16 +137,16 @@ function renderTitleSlide(textMeta) {
         </div>
       </div>
       <div class="reading-footer">
-        <div class="kbd-hint"><kbd class="kbd">Spacebar</kbd> to begin</div>
+        <div class="kbd-hint"><kbd class="kbd">→</kbd> to begin</div>
       </div>
     </div>
   `;
 
-  registerHandler('space', dismissTitleSlide);
+  registerHandler('arrow-right', dismissTitleSlide);
 }
 
 function dismissTitleSlide() {
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
   renderContentSlide();
 }
 
@@ -197,7 +197,7 @@ function renderContentSlide() {
         </div>
       </div>
       <div class="reading-footer">
-        <div class="kbd-hint"><kbd class="kbd">Spacebar</kbd> to continue when ready</div>
+        <div class="kbd-hint"><kbd class="kbd">→</kbd> to continue when ready</div>
       </div>
     </div>
   `;
@@ -206,11 +206,11 @@ function renderContentSlide() {
   minTimeMs = slide.timing?.minMs ?? globalDefaults?.minMs;
   maxTimeMs = slide.timing?.maxMs ?? globalDefaults?.maxMs;
 
-  // Spacebar must work regardless of whether auto-advance timing is configured —
+  // ArrowRight must work regardless of whether auto-advance timing is configured —
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
-  registerHandler('space', handleSpacebar);
+  registerHandler('arrow-right', handleArrowRight);
 
-  // Missing timing config means no auto-advance — Spacebar (registered above) still works.
+  // Missing timing config means no auto-advance — ArrowRight (registered above) still works.
   if (!maxTimeMs) return;
 
   cancelTimer = startTimer({
@@ -225,6 +225,6 @@ function renderContentSlide() {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
-  unregisterHandler('space');
+  unregisterHandler('arrow-right');
   containerRef = null;
 }

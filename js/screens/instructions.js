@@ -21,7 +21,7 @@ function render() {
           <h3>Reading screen controls</h3>
           <ul class="instr-list">
             <li>Each slide has a minimum time before progression is enabled.</li>
-            <li>You can continue by pressing <kbd class="kbd">Spacebar</kbd>.</li>
+            <li>You can continue by pressing <kbd class="kbd">→</kbd>.</li>
             <li>Each slide also has a maximum time and auto-advances at timeout.</li>
           </ul>
         </div>
@@ -31,8 +31,8 @@ function render() {
           <ul class="instr-list">
             <li>A question prompt appears.</li>
             <li>Think before responding (thinking window).</li>
-            <li>Press <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> to start typing.</li>
-            <li>Press <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Enter</kbd> again to submit.</li>
+            <li>For multiple-choice questions, use <kbd class="kbd">↑</kbd> and <kbd class="kbd">↓</kbd> to select an option.</li>
+            <li>Press <kbd class="kbd">→</kbd> to submit your response.</li>
             <li>The screen advances automatically at maximum time if needed.</li>
           </ul>
         </div>
