@@ -126,12 +126,14 @@ function routeToNextSlide(slides, currentIndex) {
 // "Slide N of Total" numbering, which only tracks the underlying slides array.
 function renderTitleSlide(textMeta) {
   const { title, author } = parseTitleAndAuthor(textMeta?.title);
+  const { assignedGroup, currentTextIndex } = getState();
 
   containerRef.innerHTML = `
     <div class="topbar"><span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span></div>
     <div class="reading-layout">
       <div class="reading-body title-slide-body">
         <div class="title-slide-card">
+          <span class="eyebrow">Text ${currentTextIndex + 1}</span>
           <h1 class="title-slide-heading">${title}</h1>
           ${author ? `<p class="title-slide-author">${author}</p>` : ''}
         </div>
@@ -144,7 +146,6 @@ function renderTitleSlide(textMeta) {
 
   registerHandler('arrow-right', dismissTitleSlide);
 
-  const { assignedGroup, currentTextIndex } = getState();
   const condition = getCondition(assignedGroup, currentTextIndex);
   sendMarker(MARKERS['TITLE_ONSET_' + condition.toUpperCase()]);
 }
