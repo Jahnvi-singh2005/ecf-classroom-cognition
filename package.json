@@ -4,6 +4,11 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/**/*.test.js",
-    "test:watch": "node --test --watch tests/**/*.test.js"
+    "test:watch": "node --test --watch tests/**/*.test.js",
+    "cleanup:test-sessions": "node scripts/cleanup-test-sessions.js",
+    "cleanup:test-sessions:confirm": "node scripts/cleanup-test-sessions.js --confirm"
+  },
+  "devDependencies": {
+    "firebase-admin": "^12.7.0"
   }
 }

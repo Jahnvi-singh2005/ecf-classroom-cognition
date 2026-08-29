@@ -54,6 +54,47 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none; }
   padding: 4px 6px; cursor: pointer; opacity: .55;
 }
 #exit-session-btn:hover { opacity: 1; color: var(--danger); text-decoration: underline; }
+
+/* ── EXIT SESSION DIALOG ── */
+.exit-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(26, 26, 24, .5);
+  display: flex; align-items: center; justify-content: center;
+}
+.exit-dialog-box {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 28px; max-width: 380px; width: 90%;
+}
+.exit-dialog-box h2 { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+.exit-dialog-box p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+.exit-dialog-buttons { display: flex; flex-direction: column; gap: 8px; }
+.exit-dialog-buttons button {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500;
+  padding: 10px 14px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+.exit-dialog-buttons button:hover { background: var(--bg); }
+.exit-dialog-buttons button.exit-dialog-danger { border-color: var(--danger); color: var(--danger); }
+.exit-dialog-buttons button.exit-dialog-danger:hover { background: var(--danger); color: var(--surface); }
+
+/* ── DISCARD SESSION OVERLAY ── */
+/* Non-dismissable: no close affordance, covers the full viewport above the dialog. */
+#discard-session-overlay {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(26, 26, 24, .7);
+  display: flex; align-items: center; justify-content: center;
+}
+.discard-overlay-box {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 28px; max-width: 360px; width: 90%; text-align: center;
+}
+.discard-overlay-box p { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 16px; }
+.discard-overlay-box p:last-child { margin-bottom: 0; }
+#discard-retry-btn {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500;
+  padding: 10px 18px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--danger); background: var(--danger); color: var(--surface);
+}
 .topbar-text-title { font-size: 13px; font-weight: 500; color: var(--text); }
 
 /* ── BANNER ── */

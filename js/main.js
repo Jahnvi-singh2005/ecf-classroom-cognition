@@ -101,7 +101,7 @@ function startAutosave() {
   }, DRAFT_AUTOSAVE_INTERVAL_MS);
 }
 
-function stopAutosave() {
+export function stopAutosave() {
   if (autosaveIntervalId !== null) {
     window.clearInterval(autosaveIntervalId);
     autosaveIntervalId = null;

@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   collection,
   getDocs,
   query,
@@ -80,6 +81,14 @@ function localWrite(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.error('[firebase] localStorage write failed.', error);
+  }
+}
+
+function localRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error('[firebase] localStorage remove failed.', error);
   }
 }
 
@@ -286,4 +295,33 @@ export async function writeParticipantSession(participantKey, sessionId, data) {
   }
 
   await setDoc(doc(db, 'participants', participantKey, 'sessions', sessionId), payload);
+}
+
+// Permanently deletes all data for a single in-progress session: the draft, any
+// (edge-case) completed session record, and its participant-sessions subcollection
+// entry — plus the participant document itself if that was its only session.
+export async function discardSession(sessionId, participantKey) {
+  if (usingLocalOnly) {
+    localRemove(localStorageKey('experimentSessionDrafts', sessionId));
+    localRemove(localStorageKey('experimentSessions', sessionId));
+    localRemove(localStorageKey('participants', participantKey, 'sessions', sessionId));
+
+    const remainingSessions = localReadAllWithPrefix(
+      localStorageKey('participants', participantKey, 'sessions', ''),
+    );
+    if (remainingSessions.length === 0) {
+      localRemove(localStorageKey('participants', participantKey));
+    }
+    return;
+  }
+
+  await deleteDoc(doc(db, 'experimentSessionDrafts', sessionId));
+  await deleteDoc(doc(db, 'experimentSessions', sessionId));
+  await deleteDoc(doc(db, 'participants', participantKey, 'sessions', sessionId));
+
+  const sessionsRef = collection(db, 'participants', participantKey, 'sessions');
+  const remainingSnapshot = await getDocs(query(sessionsRef, limit(1)));
+  if (remainingSnapshot.empty) {
+    await deleteDoc(doc(db, 'participants', participantKey));
+  }
 }
