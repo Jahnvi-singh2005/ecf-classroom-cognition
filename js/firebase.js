@@ -13,6 +13,7 @@ import {
   orderBy,
   limit,
 } from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js';
+import { isTestingMode } from './testingMode.js';
 
 const LOCAL_PREFIX = 'ecf-local';
 const FALLBACK_PASSWORD = 'cndl2025';
@@ -151,6 +152,11 @@ export async function changePassword(newPassword) {
 // ─── Drafts (experimentSessionDrafts/{sessionId}) ─────────────────────────
 
 export async function writeDraft(sessionId, data) {
+  if (isTestingMode()) {
+    console.log('[TEST MODE] Firestore write suppressed');
+    return;
+  }
+
   const payload = { ...data, sessionId, draftSavedAt: Date.now() };
 
   if (usingLocalOnly) {
@@ -163,6 +169,11 @@ export async function writeDraft(sessionId, data) {
 }
 
 export async function completeDraft(sessionId) {
+  if (isTestingMode()) {
+    console.log('[TEST MODE] Firestore write suppressed');
+    return;
+  }
+
   const payload = { completed: true, draftSavedAt: Date.now() };
 
   if (usingLocalOnly) {
@@ -206,6 +217,11 @@ export async function getAllDrafts() {
 // ─── Sessions (experimentSessions/{sessionId}) ────────────────────────────
 
 export async function writeSession(sessionId, data) {
+  if (isTestingMode()) {
+    console.log('[TEST MODE] Firestore write suppressed');
+    return;
+  }
+
   const payload = { ...data, sessionId };
 
   if (usingLocalOnly) {
@@ -240,6 +256,11 @@ export async function getAllSessions() {
 // ─── Participants (participants/{participantKey}) ─────────────────────────
 
 export async function writeParticipant(participantKey, data) {
+  if (isTestingMode()) {
+    console.log('[TEST MODE] Firestore write suppressed');
+    return;
+  }
+
   const payload = { ...data, updatedAt: Date.now() };
 
   if (usingLocalOnly) {
@@ -252,6 +273,11 @@ export async function writeParticipant(participantKey, data) {
 }
 
 export async function writeParticipantSession(participantKey, sessionId, data) {
+  if (isTestingMode()) {
+    console.log('[TEST MODE] Firestore write suppressed');
+    return;
+  }
+
   const payload = { ...data, sessionId };
 
   if (usingLocalOnly) {

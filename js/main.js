@@ -8,6 +8,7 @@ import { loadContentIntoState } from './content.js';
 import { initKeyboard } from './keyboard.js';
 import { initEEGMode } from './eeg.js';
 import { showExitSessionButton, hideExitSessionButton } from './exitSession.js';
+import { isTestingMode } from './testingMode.js';
 
 import * as pisConsent from './screens/pisConsent.js';
 import * as registration from './screens/registration.js';
@@ -84,7 +85,7 @@ export function goToPhase(phaseName) {
 
   if (phaseName === 'done') {
     stopAutosave();
-  } else if (getState().sessionId) {
+  } else if (getState().sessionId && !isTestingMode()) {
     startAutosave();
   }
 }
