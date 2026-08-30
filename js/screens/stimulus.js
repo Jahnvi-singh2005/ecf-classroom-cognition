@@ -211,8 +211,14 @@ function renderContentSlide() {
   `;
 
   const globalDefaults = content?.globalTimingDefaults?.pureText;
-  minTimeMs = slide.timing?.minMs ?? globalDefaults?.minMs;
-  maxTimeMs = slide.timing?.maxMs ?? globalDefaults?.maxMs;
+  if (content?.useGlobalTiming === true) {
+    // Global-timing override is on — per-slide values are ignored entirely.
+    minTimeMs = globalDefaults?.minMs;
+    maxTimeMs = globalDefaults?.maxMs;
+  } else {
+    minTimeMs = slide.timing?.minMs ?? globalDefaults?.minMs;
+    maxTimeMs = slide.timing?.maxMs ?? globalDefaults?.maxMs;
+  }
 
   // Visual-only cue: mark the slide "advance-ready" once the minimum display time
   // has elapsed, purely for the CSS-driven arrow hint — does not affect canProgress.

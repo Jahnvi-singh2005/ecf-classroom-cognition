@@ -102,6 +102,7 @@ function createDefaultConfig() {
   return {
     version: 1,
     updatedAt: Date.now(),
+    useGlobalTiming: false,
     latinSquare: deepClone(LATIN_SQUARE_DEFAULT),
     globalTimingDefaults: {
       pureText: { minMs: 0, maxMs: 0 },
@@ -219,6 +220,10 @@ function renderGeneralTab(container) {
       <div class="settings-card">
         <div class="settings-section-title">Global Timing Defaults</div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Fallback values. Per-slide overrides in Content Editor take precedence.</p>
+        <label class="toggle-info" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;">
+          <input type="checkbox" id="use-global-timing" ${workingConfig.useGlobalTiming ? 'checked' : ''}/>
+          <span>Use global timing defaults for all slides <span style="color:var(--muted);">— ignores per-slide overrides when on</span></span>
+        </label>
         <table class="settings-table">
           <thead><tr><th>Slide Type</th><th>Min (s)</th><th>Max (s)</th><th>Min words</th><th>Max words</th></tr></thead>
           <tbody>
@@ -274,6 +279,10 @@ function renderGeneralTab(container) {
       <button type="button" id="btn-reset-defaults" class="btn btn-ghost" style="border:1px solid var(--border);">Reset to Defaults</button>
     </div>
   `;
+
+  container.querySelector('#use-global-timing').addEventListener('change', (e) => {
+    workingConfig.useGlobalTiming = e.target.checked;
+  });
 
   container.querySelectorAll('[data-timing-key]').forEach((input) => {
     input.addEventListener('input', () => {
