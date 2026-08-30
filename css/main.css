@@ -190,6 +190,9 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; m
 .toggle-switch.on { background: var(--accent); }
 .toggle-switch::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .toggle-switch.on::after { left: 23px; }
+.toggle-switch.disabled { cursor: not-allowed; opacity: 0.45; }
+.toggle-row.toggle-row-disabled .toggle-info strong,
+.toggle-row.toggle-row-disabled .toggle-info span { color: var(--muted); }
 
 /* ── BUTTONS (pre-experiment only, plus the one break-screen button) ── */
 .btn {

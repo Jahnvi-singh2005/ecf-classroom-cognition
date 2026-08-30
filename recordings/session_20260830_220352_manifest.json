@@ -1,0 +1,47 @@
+{
+  "session_id": "20260830_220352",
+  "board": "SYNTHETIC_BOARD",
+  "board_id": -1,
+  "sampling_rate_hz": 250,
+  "eeg_channels": [
+    "Fz",
+    "C3",
+    "Cz",
+    "C4",
+    "Pz",
+    "PO7",
+    "Oz",
+    "PO8",
+    "F5",
+    "F7",
+    "F3",
+    "F1",
+    "F2",
+    "F4",
+    "F6",
+    "F8"
+  ],
+  "trigger_source": "websocket",
+  "started_unix": 1788107632.9000163,
+  "started_lsl": 324960.052201166,
+  "n_samples": 77827,
+  "n_triggers": 0,
+  "files": {
+    "eeg": "/Users/jahnvisingh/Desktop/ecf-classroom-cognition/recordings/session_20260830_220352_eeg.csv",
+    "clocksync": "/Users/jahnvisingh/Desktop/ecf-classroom-cognition/recordings/session_20260830_220352_clocksync.csv"
+  },
+  "clock_summary": {
+    "n": 311,
+    "span_s": 311.1069972515106,
+    "offset_mean_s": 1787782672.8398256,
+    "offset_range_us": 13154.745101928711,
+    "drift_ppm": -57.27213246246449,
+    "drift_se_ppm": 1.63806208801939,
+    "residual_rms_us": 2594.3563044551365,
+    "drift_significant": true
+  },
+  "lsl_streams": {
+    "eeg": "BrainFlowEEG",
+    "markers": "ExperimentMarkers"
+  }
+}

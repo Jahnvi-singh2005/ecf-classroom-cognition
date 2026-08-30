@@ -18,6 +18,7 @@ function randomGroup() {
 let containerRef = null;
 let currentGroup = randomGroup();
 let eegOn = false;
+let eegTestOn = false;
 
 function render() {
   containerRef.innerHTML = `
@@ -111,6 +112,14 @@ function render() {
           <div class="toggle-switch ${eegOn ? 'on' : ''}" id="eeg-toggle" role="switch" aria-checked="${eegOn}" tabindex="0"></div>
         </div>
 
+        <div class="toggle-row ${!eegOn ? 'toggle-row-disabled' : ''}">
+          <div class="toggle-info">
+            <strong>EEG Test Mode</strong>
+            <span>Fires real EEG markers, but applies Testing Mode's timing/auto-fill overrides so you can run the marker pipeline without sitting through full session timing. Requires EEG Mode.</span>
+          </div>
+          <div class="toggle-switch ${eegTestOn ? 'on' : ''} ${!eegOn ? 'disabled' : ''}" id="eeg-test-toggle" role="switch" aria-checked="${eegTestOn}" aria-disabled="${!eegOn}" tabindex="0"></div>
+        </div>
+
         <div class="toggle-row">
           <div class="toggle-info">
             <strong>Testing Mode</strong>
@@ -165,6 +174,8 @@ function bindEvents() {
   const toggleEl = containerRef.querySelector('#eeg-toggle');
   const onToggle = async () => {
     eegOn = !eegOn;
+    // EEG Test Mode requires EEG Mode — turning EEG Mode off takes it with it.
+    if (!eegOn) eegTestOn = false;
     render();
     if (eegOn) {
       const connected = await checkLSLConnection();
@@ -176,6 +187,21 @@ function bindEvents() {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onToggle();
+    }
+  });
+
+  const eegTestToggleEl = containerRef.querySelector('#eeg-test-toggle');
+  const onEegTestToggle = () => {
+    if (!eegOn) return; // disabled while EEG Mode is off
+    eegTestOn = !eegTestOn;
+    if (eegTestOn) eegOn = true; // enabling it implicitly enables EEG mode
+    render();
+  };
+  eegTestToggleEl.addEventListener('click', onEegTestToggle);
+  eegTestToggleEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onEegTestToggle();
     }
   });
 
@@ -326,12 +352,18 @@ function handleSubmit() {
   const participantKey = buildParticipantKey(participant);
   const sessionId = `${participantKey}_${Date.now()}`;
 
+  // EEG Test Mode fires markers like EEG mode but reuses every Testing Mode
+  // override (timing bypass, auto-fill, Firestore write suppression) — same
+  // in-memory flag the Testing Mode toggle sets, so it never needs duplicating.
+  if (eegTestOn) setTestingMode(true);
+
   setState({
     participant,
     participantKey,
     sessionId,
     assignedGroup: currentGroup,
-    eegMode: eegOn,
+    eegMode: eegOn || eegTestOn,
+    eegTestMode: eegTestOn,
     sessionStartTime: Date.now(),
   });
 
@@ -350,6 +382,7 @@ export function mount(container) {
   containerRef = container;
   currentGroup = randomGroup();
   eegOn = false;
+  eegTestOn = false;
   render();
 }
 

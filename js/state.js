@@ -8,6 +8,7 @@ function createInitialState() {
     participant: {},
     assignedGroup: null,
     eegMode: false,
+    eegTestMode: false,
     sessionStartTime: null,
     sessionEndTime: null,
     currentTextIndex: 0,
