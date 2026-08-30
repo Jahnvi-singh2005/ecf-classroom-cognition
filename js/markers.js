@@ -87,7 +87,7 @@ function flushPending(ws) {
   while (pendingMarkers.length > 0) {
     const markerId = pendingMarkers.shift();
     try {
-      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() }));
+      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() / 1000 }));
     } catch {
       reportFailure([markerId]);
     }
@@ -133,7 +133,7 @@ export function sendMarker(markerId) {
 
   if (ws.readyState === WebSocket.OPEN) {
     try {
-      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() }));
+      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() / 1000 }));
     } catch {
       console.log(`[EEG] marker ${markerId} failed to send`);
     }
