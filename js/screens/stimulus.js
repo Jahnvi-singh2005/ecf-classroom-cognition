@@ -20,6 +20,7 @@ import { sendMarker, MARKERS } from '../markers.js';
 
 let containerRef = null;
 let cancelTimer = null;
+let cancelMinTimer = null;
 let hasAdvanced = false;
 let elapsedMs = 0;
 let minTimeMs = 0;
@@ -80,6 +81,7 @@ function advance(advancedBy) {
   if (hasAdvanced) return;
   hasAdvanced = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  if (cancelMinTimer) { cancelMinTimer(); cancelMinTimer = null; }
   unregisterHandler('arrow-right');
 
   const { currentTextIndex, currentSlideIndex, assignedGroup } = getState();
@@ -199,6 +201,7 @@ function renderContentSlide() {
       <div class="reading-body">
         <div class="passage-card">
           <div class="passage-text">${renderMarkdown(slide.content || '')}</div>
+          <span class="advance-cue">→ continue</span>
         </div>
       </div>
       <div class="reading-footer">
@@ -210,6 +213,21 @@ function renderContentSlide() {
   const globalDefaults = content?.globalTimingDefaults?.pureText;
   minTimeMs = slide.timing?.minMs ?? globalDefaults?.minMs;
   maxTimeMs = slide.timing?.maxMs ?? globalDefaults?.maxMs;
+
+  // Visual-only cue: mark the slide "advance-ready" once the minimum display time
+  // has elapsed, purely for the CSS-driven arrow hint — does not affect canProgress.
+  const markAdvanceReady = () => {
+    containerRef?.querySelector('.reading-layout')?.classList.add('advance-ready');
+  };
+  if (minTimeMs > 0) {
+    cancelMinTimer = startTimer({
+      onTick: () => {},
+      onComplete: markAdvanceReady,
+      durationMs: minTimeMs,
+    });
+  } else {
+    markAdvanceReady();
+  }
 
   // ArrowRight must work regardless of whether auto-advance timing is configured —
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
@@ -229,6 +247,7 @@ function renderContentSlide() {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  if (cancelMinTimer) { cancelMinTimer(); cancelMinTimer = null; }
   unregisterHandler('arrow-right');
   containerRef = null;
 }
