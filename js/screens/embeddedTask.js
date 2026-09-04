@@ -79,7 +79,11 @@ function renderThinking() {
 
 function startThinkingTimer(content) {
   const defaults = content?.globalTimingDefaults?.questionProbe;
-  const maxMs = probeSlide.timing?.maxMs ?? defaults?.maxMs;
+  // The admin panel initialises every new slide's timing to { minMs: 0, maxMs: 0 }
+  // rather than leaving it unset (see js/admin/settings.js's addSlide) — so `?? `
+  // never falls through to globalTimingDefaults here. `||` treats that 0 the same
+  // as "not overridden", which is what actually makes the global default apply.
+  const maxMs = probeSlide.timing?.maxMs || defaults?.maxMs;
 
   // Testing mode: no auto-advance timer at all — thinking phase otherwise has no
   // manual escape, so ArrowRight becomes the only way forward.

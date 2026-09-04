@@ -92,7 +92,12 @@ function renderThinking() {
 
 function startThinkingTimer(content) {
   const defaults = content?.globalTimingDefaults?.questionProbe;
-  const maxMs = question.timing?.thinkingMaxMs ?? defaults?.maxMs;
+  // The admin panel initialises every PRA question's timing to
+  // { thinkingMinMs: 0, thinkingMaxMs: 0, ... } rather than leaving it unset (see
+  // js/admin/settings.js), so `??` never falls through to globalTimingDefaults
+  // here. `||` treats that 0 the same as "not overridden", which is what actually
+  // makes the global default apply.
+  const maxMs = question.timing?.thinkingMaxMs || defaults?.maxMs;
 
   // Testing mode: no auto-advance timer at all — thinking phase otherwise has no
   // manual escape, so ArrowRight becomes the only way forward.
