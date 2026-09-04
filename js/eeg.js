@@ -1,12 +1,9 @@
 // eeg.js — EEG mode logic: full-screen enforcement, tab-switch lock + visibility
-// logging, EEG background colour, and the LSL bridge connectivity check used on the
+// logging, EEG background colour, and the serial port connectivity check used on the
 // registration screen. Event markers are sent via markers.js's sendMarker().
 
 import { getState, setState } from './state.js';
 import { sendMarker, MARKERS } from './markers.js';
-
-const LSL_BRIDGE_URL = 'ws://localhost:8765';
-const LSL_CHECK_TIMEOUT_MS = 1500;
 
 let overlayEl = null;
 let blockingKeydownGuard = null;
@@ -110,37 +107,3 @@ export function initEEGMode() {
   sendMarker(MARKERS.SESSION_START);
 }
 
-// Attempts a WebSocket connection to the Python bridge. Resolves true if it opens,
-// false otherwise (bridge not running, connection refused, or timeout). Used by the
-// registration screen to show the amber "LSL bridge not connected" banner.
-export function checkLSLConnection() {
-  return new Promise((resolve) => {
-    let settled = false;
-    let socket;
-
-    try {
-      socket = new WebSocket(LSL_BRIDGE_URL);
-    } catch {
-      console.warn('[EEG MODE] WARNING: LSL bridge not connected. Markers will not be sent.');
-      resolve(false);
-      return;
-    }
-
-    const finish = (connected) => {
-      if (settled) return;
-      settled = true;
-      if (!connected) {
-        console.warn('[EEG MODE] WARNING: LSL bridge not connected. Markers will not be sent.');
-      }
-      resolve(connected);
-    };
-
-    socket.addEventListener('open', () => {
-      finish(true);
-      socket.close();
-    });
-    socket.addEventListener('error', () => finish(false));
-
-    setTimeout(() => finish(false), LSL_CHECK_TIMEOUT_MS);
-  });
-}

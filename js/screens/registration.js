@@ -2,7 +2,7 @@
 // Rebuild plan §6.1 / prototype screens 1 & 1b.
 
 import { getState, setState } from '../state.js';
-import { checkLSLConnection } from '../eeg.js';
+import { initSerialPort } from '../markers.js';
 import { buildParticipantKey } from '../utils/buildParticipantKey.js';
 import { writeDraft, writeParticipant, validatePassword } from '../firebase.js';
 import { isTestingMode, setTestingMode } from '../testingMode.js';
@@ -26,7 +26,7 @@ function render() {
       <span class="topbar-title">ECF Classroom Cognition — Reading Experiment</span>
       ${eegOn ? '<span class="topbar-badge">EEG Mode</span>' : ''}
     </div>
-    <div id="lsl-banner-slot"></div>
+    <div id="serial-banner-slot"></div>
     <div class="center-wrap" style="align-items:flex-start;padding-top:40px;overflow-y:auto;">
       <div class="form-card wide">
         <span class="eyebrow">Session Setup</span>
@@ -153,12 +153,16 @@ function fillTestData() {
   containerRef.querySelector('#field-discipline').value = 'Computer Science';
 }
 
-function renderLslBanner(connected) {
-  const slot = containerRef?.querySelector('#lsl-banner-slot');
+function renderSerialBanner(connected) {
+  const slot = containerRef?.querySelector('#serial-banner-slot');
   if (!slot) return;
-  slot.innerHTML = (eegOn && connected === false)
-    ? '<div class="banner"><div class="banner-dot"></div>LSL bridge not connected — markers disabled. Start the Python bridge before beginning an EEG session.</div>'
-    : '';
+  if (connected === true) {
+    slot.innerHTML = '<div class="banner"><div class="banner-dot"></div>Serial port connected.</div>';
+  } else if (connected === false) {
+    slot.innerHTML = '<div class="banner"><div class="banner-dot"></div>Serial port not selected — EEG mode disabled.</div>';
+  } else {
+    slot.innerHTML = '';
+  }
 }
 
 function bindEvents() {
@@ -178,8 +182,13 @@ function bindEvents() {
     if (!eegOn) eegTestOn = false;
     render();
     if (eegOn) {
-      const connected = await checkLSLConnection();
-      renderLslBanner(connected);
+      const connected = await initSerialPort();
+      if (!connected) {
+        eegOn = false;
+        eegTestOn = false;
+        render();
+      }
+      renderSerialBanner(connected);
     }
   };
   toggleEl.addEventListener('click', onToggle);

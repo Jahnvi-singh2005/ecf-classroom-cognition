@@ -8,11 +8,9 @@
     "cleanup:test-sessions": "node scripts/cleanup-test-sessions.js",
     "cleanup:test-sessions:confirm": "node scripts/cleanup-test-sessions.js --confirm",
     "clear:all-data": "node scripts/clear-all-data.js",
-    "clear:all-data:confirm": "node scripts/clear-all-data.js --confirm",
-    "marker:monitor": "node scripts/marker-monitor.js"
+    "clear:all-data:confirm": "node scripts/clear-all-data.js --confirm"
   },
   "devDependencies": {
-    "firebase-admin": "^12.7.0",
-    "ws": "^8.21.3"
+    "firebase-admin": "^12.7.0"
   }
 }

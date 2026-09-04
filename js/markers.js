@@ -1,6 +1,6 @@
-// markers.js — EEG event marker IDs + transport. Sends markers over WebSocket to the
-// local LSL bridge (ws://localhost:8765, same endpoint eeg.js's checkLSLConnection()
-// probes) whenever eegMode is active. No-op entirely outside EEG mode.
+// markers.js — EEG event marker IDs + transport. Sends markers over a Web Serial
+// connection to recorder_final.py as bare integer strings terminated by a newline
+// (e.g. "220\n") whenever eegMode is active. No-op entirely outside EEG mode.
 
 import { getState } from './state.js';
 
@@ -74,72 +74,42 @@ export const MARKERS = Object.freeze({
   FULLSCREEN_EXIT: 610,
 });
 
-const MARKER_SERVER_URL = 'ws://localhost:8765';
+const textEncoder = new TextEncoder();
 
-let socket = null;
-let pendingMarkers = [];
+let serialPort = null;
+let serialWriter = null;
 
-function reportFailure(markerIds) {
-  markerIds.forEach((markerId) => console.log(`[EEG] marker ${markerId} failed to send`));
-}
-
-function flushPending(ws) {
-  while (pendingMarkers.length > 0) {
-    const markerId = pendingMarkers.shift();
-    try {
-      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() / 1000 }));
-    } catch {
-      reportFailure([markerId]);
-    }
-  }
-}
-
-// Reuses an already-open or already-connecting socket; only opens a new one
-// (the single reconnect attempt) once the previous socket has closed/errored.
-function ensureSocket() {
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-    return socket;
+// Prompts the experimenter to pick a serial port and opens it at 115200 baud.
+// Called from the EEG toggle handler on registration — a click is a valid user
+// gesture for requestPort(). Resolves true on success, false on cancel/error.
+export async function initSerialPort() {
+  if (!navigator.serial) {
+    alert('Web Serial API not supported. Please use Chrome or Edge.');
+    return false;
   }
 
-  let ws;
   try {
-    ws = new WebSocket(MARKER_SERVER_URL);
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 115200 });
+    serialWriter = serialPort.writable.getWriter();
+    console.log('[EEG] Serial port opened');
+    return true;
   } catch {
-    const stuck = pendingMarkers.splice(0, pendingMarkers.length);
-    reportFailure(stuck);
-    return null;
+    console.log('[EEG] Serial port failed to open');
+    return false;
   }
-
-  ws.addEventListener('open', () => flushPending(ws));
-  ws.addEventListener('close', () => {
-    if (socket === ws) socket = null;
-    const stuck = pendingMarkers.splice(0, pendingMarkers.length);
-    reportFailure(stuck);
-  });
-  ws.addEventListener('error', () => {
-    if (socket === ws) socket = null;
-  });
-
-  socket = ws;
-  return ws;
 }
 
 export function sendMarker(markerId) {
-  console.log('[MARKER DEBUG] sendMarker called with', markerId, 'eegMode=', getState().eegMode);
   if (getState().eegMode !== true) return;
 
-  const ws = ensureSocket();
-  if (!ws) return;
-
-  if (ws.readyState === WebSocket.OPEN) {
-    try {
-      ws.send(JSON.stringify({ marker: markerId, timestamp: Date.now() / 1000 }));
-    } catch {
-      console.log(`[EEG] marker ${markerId} failed to send`);
-    }
+  if (!serialWriter) {
+    console.log(`[EEG] marker ${markerId} dropped — serial port not open`);
     return;
   }
 
-  // Connecting — queue it, flushed on open or reported on close/error above.
-  pendingMarkers.push(markerId);
+  const encodedData = textEncoder.encode(markerId.toString() + '\n');
+  serialWriter.write(encodedData).catch(() => {
+    console.log(`[EEG] marker ${markerId} failed to send`);
+  });
 }
