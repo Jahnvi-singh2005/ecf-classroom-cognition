@@ -9,6 +9,9 @@ export const MARKERS = Object.freeze({
   SESSION_START: 100,
   SESSION_END: 101,
 
+  // Reserved — connectivity test only, never part of the experiment scheme
+  TEST_PING: 255,
+
   // Baseline
   BASELINE_START: 110,
   BASELINE_END: 111,
@@ -100,8 +103,10 @@ export async function initSerialPort() {
   }
 }
 
-export function sendMarker(markerId) {
-  if (getState().eegMode !== true) return;
+// `force` bypasses the eegMode gate — used only by the registration screen's
+// Send Test Marker button, which fires before eegMode is set in state.
+export function sendMarker(markerId, { force = false } = {}) {
+  if (!force && getState().eegMode !== true) return;
 
   if (!serialWriter) {
     console.log(`[EEG] marker ${markerId} dropped — serial port not open`);

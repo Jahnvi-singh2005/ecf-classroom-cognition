@@ -193,6 +193,15 @@ h2 { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; m
 .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; margin-top: 24px; padding: 13px; }
 .btn-secondary { background: var(--surface); color: var(--accent); border: 1.5px solid var(--accent); }
 .btn-ghost { background: transparent; color: var(--muted); }
+.btn-outline-neutral {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  width: 100%; justify-content: center; margin-top: 10px; padding: 9px; font-size: 13px;
+}
+.btn-outline-neutral:hover { background: var(--bg); }
+
+.test-marker-confirm {
+  font-size: 0.85rem; color: var(--muted); margin-top: 6px; text-align: center;
+}
 
 /* ── CONSENT ── */
 .consent-body {

@@ -2,7 +2,7 @@
 // Rebuild plan §6.1 / prototype screens 1 & 1b.
 
 import { getState, setState } from '../state.js';
-import { initSerialPort } from '../markers.js';
+import { initSerialPort, sendMarker, MARKERS } from '../markers.js';
 import { buildParticipantKey } from '../utils/buildParticipantKey.js';
 import { writeDraft, writeParticipant, validatePassword } from '../firebase.js';
 import { isTestingMode, setTestingMode } from '../testingMode.js';
@@ -19,6 +19,7 @@ let containerRef = null;
 let currentGroup = randomGroup();
 let eegOn = false;
 let eegTestOn = false;
+let serialConnected = false;
 
 function render() {
   containerRef.innerHTML = `
@@ -120,6 +121,11 @@ function render() {
           <div class="toggle-switch ${eegTestOn ? 'on' : ''} ${!eegOn ? 'disabled' : ''}" id="eeg-test-toggle" role="switch" aria-checked="${eegTestOn}" aria-disabled="${!eegOn}" tabindex="0"></div>
         </div>
 
+        ${eegOn && eegTestOn && serialConnected ? `
+        <button type="button" id="btn-send-test-marker" class="btn btn-outline-neutral">Send Test Marker</button>
+        <span class="test-marker-confirm" id="test-marker-confirm"></span>
+        ` : ''}
+
         <div class="toggle-row">
           <div class="toggle-info">
             <strong>Testing Mode</strong>
@@ -179,15 +185,19 @@ function bindEvents() {
   const onToggle = async () => {
     eegOn = !eegOn;
     // EEG Test Mode requires EEG Mode — turning EEG Mode off takes it with it.
-    if (!eegOn) eegTestOn = false;
+    if (!eegOn) {
+      eegTestOn = false;
+      serialConnected = false;
+    }
     render();
     if (eegOn) {
       const connected = await initSerialPort();
+      serialConnected = connected;
       if (!connected) {
         eegOn = false;
         eegTestOn = false;
-        render();
       }
+      render();
       renderSerialBanner(connected);
     }
   };
@@ -214,6 +224,9 @@ function bindEvents() {
     }
   });
 
+  const sendTestMarkerBtn = containerRef.querySelector('#btn-send-test-marker');
+  sendTestMarkerBtn?.addEventListener('click', handleSendTestMarker);
+
   const testingToggleEl = containerRef.querySelector('#testing-toggle');
   testingToggleEl.addEventListener('click', handleTestingModeToggle);
   testingToggleEl.addEventListener('keydown', (event) => {
@@ -224,6 +237,20 @@ function bindEvents() {
   });
 
   containerRef.querySelector('#btn-submit').addEventListener('click', handleSubmit);
+}
+
+function handleSendTestMarker() {
+  sendMarker(MARKERS.SESSION_START, { force: true });
+  setTimeout(() => sendMarker(MARKERS.TEST_PING, { force: true }), 500);
+  setTimeout(() => sendMarker(MARKERS.SESSION_END, { force: true }), 1000);
+
+  const confirmEl = containerRef?.querySelector('#test-marker-confirm');
+  if (confirmEl) {
+    confirmEl.textContent = 'Test markers sent — check your receiver.';
+    setTimeout(() => {
+      if (confirmEl.isConnected) confirmEl.textContent = '';
+    }, 3000);
+  }
 }
 
 async function handleTestingModeToggle() {
@@ -392,6 +419,7 @@ export function mount(container) {
   currentGroup = randomGroup();
   eegOn = false;
   eegTestOn = false;
+  serialConnected = false;
   render();
 }
 
