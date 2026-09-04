@@ -1,7 +1,7 @@
-// exitSession.js — persistent "Exit Session" corner button, shown throughout the
-// experiment once a session exists. Appended directly to <body> (not #app) so it
-// survives every screen's innerHTML rebuild, instead of duplicating markup into
-// every screen file — main.js's goToPhase() shows/hides it based on phase.
+// exitSession.js — Exit Session flow, reachable only via the Cmd+Shift+E /
+// Ctrl+Shift+E keyboard shortcut throughout the experiment once a session exists.
+// The keydown listener lives on <body> (not #app) so it survives every screen's
+// innerHTML rebuild — main.js's goToPhase() enables/disables it based on phase.
 
 import { getState } from './state.js';
 import { writeSession, writeParticipant, writeParticipantSession, completeDraft, discardSession } from './firebase.js';
@@ -9,24 +9,26 @@ import { exitFullScreen } from './eeg.js';
 import { isTestingMode } from './testingMode.js';
 import { stopAutosave } from './main.js';
 
-let buttonEl = null;
 let dialogEl = null;
 let overlayEl = null;
+let exitShortcutAvailable = false;
 
-export function showExitSessionButton() {
-  if (buttonEl) return;
-  buttonEl = document.createElement('button');
-  buttonEl.type = 'button';
-  buttonEl.id = 'exit-session-btn';
-  buttonEl.textContent = 'Exit Session';
-  buttonEl.addEventListener('click', openExitDialog);
-  document.body.appendChild(buttonEl);
+function handleExitShortcut(event) {
+  if (!exitShortcutAvailable) return;
+  const isShortcut = (event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'e';
+  if (!isShortcut) return;
+  event.preventDefault();
+  openExitDialog();
 }
 
-export function hideExitSessionButton() {
-  if (!buttonEl) return;
-  buttonEl.remove();
-  buttonEl = null;
+document.addEventListener('keydown', handleExitShortcut);
+
+export function enableExitShortcut() {
+  exitShortcutAvailable = true;
+}
+
+export function disableExitShortcut() {
+  exitShortcutAvailable = false;
 }
 
 // Same session-record shape/write path as a normal completion (done.js), plus the

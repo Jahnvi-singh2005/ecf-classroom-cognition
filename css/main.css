@@ -45,16 +45,6 @@ body.cursor-hidden, body.cursor-hidden * { cursor: none; }
 }
 .topbar-meta { display: flex; align-items: center; gap: 14px; }
 
-/* ── EXIT SESSION ── */
-/* Fixed to <body>, not #app, so it survives every screen's innerHTML rebuild. */
-#exit-session-btn {
-  position: fixed; bottom: 10px; left: 10px; z-index: 9999;
-  font-family: var(--font-ui); font-size: 11px; font-weight: 500;
-  color: var(--muted); background: transparent; border: none;
-  padding: 4px 6px; cursor: pointer; opacity: .55;
-}
-#exit-session-btn:hover { opacity: 1; color: var(--danger); text-decoration: underline; }
-
 /* ── EXIT SESSION DIALOG ── */
 .exit-dialog-backdrop {
   position: fixed; inset: 0; z-index: 10000;

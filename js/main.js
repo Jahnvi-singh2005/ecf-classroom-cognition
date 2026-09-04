@@ -7,7 +7,7 @@ import { initFirebase, writeDraft, checkIncompleteDraft } from './firebase.js';
 import { loadContentIntoState } from './content.js';
 import { initKeyboard } from './keyboard.js';
 import { initEEGMode } from './eeg.js';
-import { showExitSessionButton, hideExitSessionButton } from './exitSession.js';
+import { enableExitShortcut, disableExitShortcut } from './exitSession.js';
 import { isTestingMode } from './testingMode.js';
 
 import * as pisConsent from './screens/pisConsent.js';
@@ -72,13 +72,13 @@ export function goToPhase(phaseName) {
   currentScreen = screenModule;
   currentScreen.mount(appContainer);
 
-  // Exit Session is available for the whole experiment — from registration
-  // submit (when a session first exists) through to the final PRA/feedback.
-  // Hidden before a session exists and after it's already complete.
+  // The Cmd/Ctrl+Shift+E exit shortcut is available for the whole experiment —
+  // from registration submit (when a session first exists) through to the final
+  // PRA/feedback. Disabled before a session exists and after it's already complete.
   if (phaseName === 'pisConsent' || phaseName === 'registration' || phaseName === 'done') {
-    hideExitSessionButton();
+    disableExitShortcut();
   } else {
-    showExitSessionButton();
+    enableExitShortcut();
   }
 
   document.body.classList.toggle('cursor-hidden', KEYBOARD_ONLY_PHASES.includes(phaseName));
