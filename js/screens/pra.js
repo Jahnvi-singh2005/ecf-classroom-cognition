@@ -231,7 +231,7 @@ function enterResponsePhase() {
   const isWritten = question.type === 'written';
   const globalKey = isWritten ? 'praWrittenTextBox' : 'praMcOptions';
   const defaults = content?.globalTimingDefaults?.[globalKey];
-  const maxMs = question.timing?.responseMaxMs ?? defaults?.maxMs;
+  const maxMs = question.timing?.responseMaxMs || defaults?.maxMs;
 
   sendMarker(isWritten ? MARKERS.PRA_RESPOND_WRITTEN : MARKERS.PRA_RESPOND_MC);
 

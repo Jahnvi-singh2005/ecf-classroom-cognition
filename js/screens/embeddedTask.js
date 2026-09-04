@@ -214,7 +214,7 @@ function enterResponsePhase() {
   const { content } = getState();
   const globalKey = condition === 'active' ? 'activeOptions' : 'constructiveTextBox';
   const defaults = content?.globalTimingDefaults?.[globalKey];
-  const maxMs = optionsSlide.timing?.maxMs ?? defaults?.maxMs;
+  const maxMs = optionsSlide.timing?.maxMs || defaults?.maxMs;
 
   sendMarker(condition === 'active' ? MARKERS.EMBED_RESPOND_ACTIVE : MARKERS.EMBED_RESPOND_CONSTRUCTIVE);
 
