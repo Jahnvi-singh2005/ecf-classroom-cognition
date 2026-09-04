@@ -12,43 +12,43 @@ import { isTestingMode } from '../testingMode.js';
 import { goToPhase } from '../main.js';
 
 const QUESTIONS = [
-  { key: 'perceivedDifficulty', text: 'Perceived difficulty', low: 'Low', high: 'High' },
-  { key: 'perceivedEngagement', text: 'Perceived engagement', low: 'Low', high: 'High' },
-  { key: 'perceivedConfusion', text: 'Perceived confusion', low: 'Low', high: 'High' },
-  { key: 'perceivedEffort', text: 'Perceived effort', low: 'Low', high: 'High' },
+  { key: 'perceivedDifficulty', text: 'How difficult was this text to read?', low: 'Low', high: 'High' },
+  { key: 'perceivedEngagement', text: 'How engaging did you find this text?', low: 'Low', high: 'High' },
+  { key: 'perceivedConfusion', text: 'How confused did you feel while reading?', low: 'Low', high: 'High' },
+  { key: 'perceivedEffort', text: 'How much effort did you put into this task?', low: 'Low', high: 'High' },
   {
     key: 'confidenceInAnswers',
-    text: 'How confident are you in your answers?',
+    text: 'How confident are you in the answers you just gave?',
     low: 'Not confident at all',
     high: 'Completely confident',
   },
   {
     key: 'understandingImproved',
-    text: 'Do you feel that you understand the topic better after this task?',
+    text: 'I understand this topic better now than before I read the text.',
     low: 'Strongly disagree',
     high: 'Strongly agree',
   },
   {
     key: 'priorFamiliarity',
-    text: 'How familiar were you with the contents of this topic before this task?',
+    text: 'How much did you already know about this topic before reading?',
     low: 'Not familiar at all',
     high: 'Well aware of the topic',
   },
   {
     key: 'difficultyMeaningful',
-    text: 'Did the difficulty feel meaningful or unnecessarily confusing?',
+    text: 'The difficulty in this text felt worthwhile, not just confusing.',
     low: 'Completely confusing',
     high: 'Completely meaningful',
   },
   {
     key: 'requiredInference',
-    text: 'Did this task require you to figure things out beyond what was explicitly stated?',
+    text: 'This task required me to think beyond what the text directly stated.',
     low: 'Strongly disagree',
     high: 'Strongly agree',
   },
   {
     key: 'attentionFluctuation',
-    text: 'How much did your attention fluctuate during the task?',
+    text: 'How often did your mind wander while reading?',
     low: 'Not at all',
     high: 'Did not pay attention at all',
   },
