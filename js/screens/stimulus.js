@@ -201,6 +201,7 @@ function renderContentSlide() {
       <div class="reading-body">
         <div class="passage-card">
           <div class="passage-text">${renderMarkdown(slide.content || '')}</div>
+          <span class="advance-cue-wait">please wait…</span>
           <span class="advance-cue">→ continue</span>
         </div>
       </div>

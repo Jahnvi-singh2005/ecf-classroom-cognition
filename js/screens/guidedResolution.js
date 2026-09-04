@@ -16,6 +16,7 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
 let containerRef = null;
 let cancelTimer = null;
+let cancelMinTimer = null;
 let hasAdvanced = false;
 let elapsedMs = 0;
 let minTimeMs = 0;
@@ -39,6 +40,7 @@ function advance() {
   if (hasAdvanced) return;
   hasAdvanced = true;
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  if (cancelMinTimer) { cancelMinTimer(); cancelMinTimer = null; }
   unregisterHandler('arrow-right');
 
   sendMarker(MARKERS.GUIDED_DISMISSED);
@@ -120,7 +122,8 @@ export function mount(container) {
           <div class="resolution-text">${renderMarkdown(resolutionSlide.content || '')}</div>
         </div>
         <div class="resolution-footer">
-          <div class="kbd-hint"><kbd class="kbd">→</kbd> to continue${hasNextSection ? ` to Section ${sectionNumber + 1}` : ''}</div>
+          <div class="kbd-hint resolution-advance-wait">please wait…</div>
+          <div class="kbd-hint resolution-advance-cue"><kbd class="kbd">→</kbd> to continue${hasNextSection ? ` to Section ${sectionNumber + 1}` : ''}</div>
         </div>
       </div>
     </div>
@@ -129,6 +132,21 @@ export function mount(container) {
   const defaults = content?.globalTimingDefaults?.guidedResolution;
   minTimeMs = resolutionSlide.timing?.minMs ?? defaults?.minMs;
   maxTimeMs = resolutionSlide.timing?.maxMs ?? defaults?.maxMs;
+
+  // Visual-only cue: mark the footer "advance-ready" once the minimum display time
+  // has elapsed, purely for the CSS-driven arrow hint — does not affect canProgress.
+  const markAdvanceReady = () => {
+    containerRef?.querySelector('.resolution-footer')?.classList.add('advance-ready');
+  };
+  if (minTimeMs > 0) {
+    cancelMinTimer = startTimer({
+      onTick: () => {},
+      onComplete: markAdvanceReady,
+      durationMs: minTimeMs,
+    });
+  } else {
+    markAdvanceReady();
+  }
 
   // ArrowRight must work regardless of whether auto-advance timing is configured —
   // a missing/zero maxMs should only disable the auto-timeout below, not advancing.
@@ -148,6 +166,7 @@ export function mount(container) {
 
 export function unmount() {
   if (cancelTimer) { cancelTimer(); cancelTimer = null; }
+  if (cancelMinTimer) { cancelMinTimer(); cancelMinTimer = null; }
   unregisterHandler('arrow-right');
   containerRef = null;
 }
